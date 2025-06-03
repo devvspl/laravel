@@ -54,7 +54,7 @@
     --vz-danger-text-emphasis: #f3846d;
     --vz-light-text-emphasis: #434e5b;
     --vz-dark-text-emphasis: #4f5a66;
-    --vz-primary-bg-subtle: rgba(64, 81, 137, 0.15);
+    --vz-primary-bg-subtle: rgba(0, 24, 104, 0.15);
     --vz-secondary-bg-subtle: rgba(53, 119, 241, 0.15);
     --vz-success-bg-subtle: rgba(10, 179, 156, 0.15);
     --vz-info-bg-subtle: rgba(41, 156, 219, 0.15);
@@ -355,7 +355,7 @@
     --vz-primary-text-emphasis: #204791;
 }
 [data-theme="default"] .card-radio .form-check-label[for="themeColor-01"] {
-    background-color: #405189;
+    background-color: #001868;
 }
 [data-theme="default"] .card-radio .form-check-label[for="themeColor-02"] {
     background-color: #066b5e;
@@ -3208,7 +3208,7 @@
 }
 .navbar-menu .navbar-nav .nav-link:hover .icon-dual {
     color: var(--vz-vertical-menu-item-hover-color);
-    fill: rgba(64, 81, 137, 0.16);
+    fill: rgba(0, 24, 104, 0.16);
 }
 .navbar-menu .navbar-nav .nav-link[data-bs-toggle="collapse"]:after {
     display: block;
@@ -3234,7 +3234,7 @@
     .nav-link[data-bs-toggle="collapse"][aria-expanded="true"]
     .icon-dual {
     color: var(--vz-vertical-menu-item-hover-color);
-    fill: rgba(64, 81, 137, 0.16);
+    fill: rgba(0, 24, 104, 0.16);
 }
 .navbar-menu
     .navbar-nav
@@ -5474,7 +5474,7 @@
     background-color: rgba(255, 255, 255, 0.4);
 }
 .waves-effect.waves-primary .waves-ripple {
-    background-color: rgba(64, 81, 137, 0.4);
+    background-color: rgba(0, 24, 104, 0.4);
 }
 .waves-effect.waves-success .waves-ripple {
     background-color: rgba(10, 179, 156, 0.4);
@@ -8709,8 +8709,8 @@ button {
     color: #fff;
 }
 .dropdownmenu-primary .dropdown-item:is(:focus, :hover, .active) {
-    background-color: rgba(64, 81, 137, 0.07);
-    color: #405189;
+    background-color: rgba(0, 24, 104, 0.07);
+    color: #001868;
 }
 .dropdownmenu-secondary .dropdown-item:is(:focus, :hover, .active) {
     background-color: rgba(53, 119, 241, 0.07);
@@ -10914,9 +10914,9 @@ div.code-toolbar > .toolbar button {
         border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out,
         -webkit-box-shadow 0.15s ease-in-out !important;
     border-radius: 0.2rem !important;
-    border: 1px solid rgba(64, 81, 137, 0.35) !important;
+    border: 1px solid rgba(0, 24, 104, 0.35) !important;
     background-color: transparent;
-    color: #405189 !important;
+    color: #001868 !important;
     -webkit-box-shadow: none !important;
     box-shadow: none !important;
 }
@@ -10926,7 +10926,7 @@ div.code-toolbar > .toolbar button:focus {
     box-shadow: none !important;
 }
 div.code-toolbar > .toolbar button:hover {
-    background-color: #405189 !important;
+    background-color: #001868 !important;
     color: #fff !important;
 }
 .swal2-container .swal2-title {
@@ -13087,7 +13087,7 @@ button.gridjs-sort-desc {
     color: #fff;
     font-size: 16px;
     line-height: 40px;
-    background: #405189;
+    background: #001868;
     border-radius: 4px;
     padding: 10px 20px;
 }

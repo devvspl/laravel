@@ -1,151 +1,47 @@
-@extends('layouts.app') @section('content')
+@extends('layouts.app')
+@section('content')
 <div class="page-content">
     <div class="container-fluid">
         @section('title', ucwords(str_replace('-', ' ', Request::path())))
         <x-theme.breadcrumb
             title="{{ ucwords(str_replace('-', ' ', Request::path())) }}"
             :breadcrumbs="[
-            ['label' => 'Dashboards', 'url' => '#'],
-            ['label' => ucwords(str_replace('-', ' ', Request::path()))],
-        ]"
+                ['label' => 'Dashboards', 'url' => '#'],
+                ['label' => ucwords(str_replace('-', ' ', Request::path()))],
+            ]"
         />
         <div class="row">
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-primary rounded-circle fs-3 material-shadow">
-                                    <i class="ri-wallet-3-fill align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Total Expense</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="15000">0</span></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-warning rounded-circle fs-3">
-                                    <i class="ri-time-line align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Draft</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="1300">0</span></h4>
+            @php
+                $cards = [
+                    ['label' => 'Total Expense', 'icon' => 'ri-wallet-3-fill', 'color' => 'text-primary', 'value' => $cardData['Total Expense'] ?? 0],
+                    ['label' => 'Draft', 'icon' => 'ri-time-line', 'color' => 'text-warning', 'value' => $cardData['Draft'] ?? 0],
+                    ['label' => 'Deactivated', 'icon' => 'ri-archive-line', 'color' => 'text-secondary', 'value' => $cardData['Deactivated'] ?? 0],
+                    ['label' => 'Submitted', 'icon' => 'ri-send-plane-fill', 'color' => 'text-dark', 'value' => $cardData['Submitted'] ?? 0],
+                    ['label' => 'Filled', 'icon' => 'ri-file-list-3-line', 'color' => 'text-info', 'value' => $cardData['Filled'] ?? 0],
+                    ['label' => 'Verified', 'icon' => 'ri-eye-fill', 'color' => 'text-success', 'value' => $cardData['Verified'] ?? 0],
+                    ['label' => 'Approved', 'icon' => 'ri-check-double-fill', 'color' => 'text-success', 'value' => $cardData['Approved'] ?? 0],
+                    ['label' => 'Financed', 'icon' => 'ri-hand-coin-fill', 'color' => 'text-primary', 'value' => $cardData['Financed'] ?? 0],
+                ];
+            @endphp
+            @foreach ($cards as $card)
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm flex-shrink-0">
+                                    <span class="avatar-title bg-light {{ $card['color'] }} rounded-circle fs-3 material-shadow">
+                                        <i class="{{ $card['icon'] }} align-middle"></i>
+                                    </span>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">{{ $card['label'] }}</p>
+                                    <h4 class="mb-0"><span class="counter-value" data-target="{{ $card['value'] }}">0</span></h4>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-secondary rounded-circle fs-3">
-                                    <i class="ri-archive-line align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Deactivated</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="300">0</span></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-dark rounded-circle fs-3">
-                                    <i class="ri-send-plane-fill align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Submitted</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="8000">0</span></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-info rounded-circle fs-3">
-                                    <i class="ri-file-list-3-line align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Filled</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="2200">0</span></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-success rounded-circle fs-3">
-                                    <i class="ri-eye-fill align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Verified</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="5000">0</span></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-success rounded-circle fs-3">
-                                    <i class="ri-check-double-fill align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Approved</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="4200">0</span></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-light text-primary rounded-circle fs-3">
-                                    <i class="ri-hand-coin-fill align-middle"></i>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <p class="text-uppercase fw-semibold fs-12 text-muted mb-1">Financed</p>
-                                <h4 class="mb-0"><span class="counter-value" data-target="10000">0</span></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @endforeach
         </div>
         <div class="row">
             <div class="col-xl-12">
@@ -160,15 +56,20 @@
                     </div>
                     <div class="card-header p-0 border-0 bg-light-subtle">
                         <div class="row g-0 text-center">
-                            @php $months = [ 'jan' => 'January', 'feb' => 'February', 'mar' => 'March', 'apr' => 'April', 'may' => 'May', 'jun' => 'June', 'jul' => 'July', 'aug' => 'August', 'sep' => 'September', 'oct' => 'October', 'nov'
-                            => 'November', 'dec' => 'December' ]; @endphp
+                            @php
+                                $months = [
+                                    'jan' => 'January', 'feb' => 'February', 'mar' => 'March', 'apr' => 'April',
+                                    'may' => 'May', 'jun' => 'June', 'jul' => 'July', 'aug' => 'August',
+                                    'sep' => 'September', 'oct' => 'October', 'nov' => 'November', 'dec' => 'December'
+                                ];
+                            @endphp
                             <div class="col-6 col-sm-3">
                                 <div class="p-3 border border-dashed border-start-0">
                                     <label class="form-label mb-1 text-muted">Month</label>
                                     <select class="form-select select2" name="month" id="select-month">
                                         <option value="">Select Month</option>
                                         @foreach ($months as $key => $label)
-                                        <option value="{{ $key }}">{{ $label }}</option>
+                                            <option value="{{ $key }}">{{ $label }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -178,10 +79,9 @@
                                     <label class="form-label mb-1 text-muted">Claim Type</label>
                                     <select class="form-select select2" name="claim_type" id="select-claim-type">
                                         <option value="">Select Type</option>
-                                        <option value="medical">Medical</option>
-                                        <option value="travel">Travel</option>
-                                        <option value="meal">Meal</option>
-                                        <option value="misc">Miscellaneous</option>
+                                        @foreach ($claimTypeTotals as $claimType)
+                                            <option value="{{ strtolower($claimType->ClaimName) }}">{{ $claimType->ClaimName }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -190,10 +90,9 @@
                                     <label class="form-label mb-1 text-muted">Department</label>
                                     <select class="form-select select2" name="department" id="select-department">
                                         <option value="">Select Department</option>
-                                        <option value="hr">HR</option>
-                                        <option value="finance">Finance</option>
-                                        <option value="it">IT</option>
-                                        <option value="sales">Sales</option>
+                                        @foreach ($departmentTotals as $dept)
+                                            <option value="{{ strtolower($dept->department_name) }}">{{ $dept->department_name }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -202,10 +101,11 @@
                                     <label class="form-label mb-1 text-muted">Claim Status</label>
                                     <select class="form-select select2" name="claim_status" id="select-claim-status">
                                         <option value="">Select Status</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="approved">Approved</option>
-                                        <option value="rejected">Rejected</option>
-                                        <option value="processed">Processed</option>
+                                        @foreach ($cardData as $label => $value)
+                                            @if ($label != 'Total Expense')
+                                                <option value="{{ strtolower($label) }}">{{ $label }}</option>
+                                            @endif
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -228,75 +128,144 @@
         </div>
     </div>
 </div>
-@endsection @push('styles') @endpush @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-<script>
-    $(document).ready(function () {
-        $(".select2").select2({ width: "100%" });
-
-        const departmentCtx = document.getElementById("departmentExpensesChart").getContext("2d");
-        new Chart(departmentCtx, {
-            type: "bar",
-            data: {
-                labels: ["HR", "Finance", "IT", "Sales"],
+@endsection
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endpush
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function () {
+            $(".select2").select2({ width: "100%" });
+            const departmentData = {
+                labels: [@foreach ($departmentTotals as $dept)"{{ $dept->department_name }}",@endforeach],
                 datasets: [
                     {
                         label: "CY",
-                        data: [12000, 15000, 10000, 17000],
+                        data: [@foreach ($departmentTotals as $dept){{ $dept->TotalFinancedTAmt_Y6 }},@endforeach],
                         backgroundColor: "rgba(54, 162, 235, 0.7)",
                     },
                     {
                         label: "PY",
-                        data: [10000, 13000, 9000, 14000],
+                        data: [@foreach ($departmentTotals as $dept){{ $dept->TotalFinancedTAmt_Y5 }},@endforeach],
                         backgroundColor: "rgba(255, 206, 86, 0.7)",
                     },
                 ],
-            },
-            options: {
-                indexAxis: "y",
-                responsive: true,
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                    },
-                },
-                plugins: {
-                    legend: {
-                        position: "top",
-                    },
-                },
-            },
-        });
-
-        const categoryCtx = document.getElementById("categoryExpensesChart").getContext("2d");
-        new Chart(categoryCtx, {
-            type: "bar",
-            data: {
-                labels: ["Medical", "Travel", "Meal", "Misc"],
+            };
+            const categoryData = {
+                labels: [@foreach ($claimTypeTotals as $claimType)"{{ $claimType->ClaimName }}",@endforeach],
                 datasets: [
                     {
                         label: "CY Expenses",
-                        data: [3000, 5000, 2000, 1000],
-                        backgroundColor: ["rgba(255, 99, 132, 0.7)", "rgba(54, 162, 235, 0.7)", "rgba(255, 206, 86, 0.7)", "rgba(75, 192, 192, 0.7)"],
+                        data: [@foreach ($claimTypeTotals as $claimType){{ $claimType->TotalFinancedAmount }},@endforeach],
+                        backgroundColor: [
+                            "rgba(255, 99, 132, 0.7)",
+                            "rgba(54, 162, 235, 0.7)",
+                            "rgba(255, 206, 86, 0.7)",
+                            "rgba(75, 192, 192, 0.7)",
+                        ],
                     },
                 ],
-            },
-            options: {
-                indexAxis: "y",
-                responsive: true,
-                scales: {
-                    x: {
-                        beginAtZero: true,
+            };
+            const departmentCtx = document.getElementById("departmentExpensesChart").getContext("2d");
+            const departmentChart = new Chart(departmentCtx, {
+                type: "bar",
+                data: departmentData,
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            position: "top",
+                        },
                     },
                 },
-                plugins: {
-                    legend: {
-                        display: false,
+            });
+            const categoryCtx = document.getElementById("categoryExpensesChart").getContext("2d");
+            const categoryChart = new Chart(categoryCtx, {
+                type: "bar",
+                data: categoryData,
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
                     },
                 },
-            },
+            });
+            // AJAX for filter updates
+            function updateCharts() {
+                const month = $("#select-month").val();
+                const claimType = $("#select-claim-type").val();
+                const department = $("#select-department").val();
+                const claimStatus = $("#select-claim-status").val();
+
+                $.ajax({
+                    url: "{{ route('admin.overview.filter') }}",
+                    method: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        month: month,
+                        claim_type: claimType,
+                        department: department,
+                        claim_status: claimStatus,
+                    },
+                    success: function (response) {
+                        // Update department chart
+                        departmentChart.data.labels = response.departmentTotals.map(d => d.department_name);
+                        departmentChart.data.datasets[0].data = response.departmentTotals.map(d => d.TotalFinancedTAmt_Y6);
+                        departmentChart.data.datasets[1].data = response.departmentTotals.map(d => d.TotalFinancedTAmt_Y5);
+                        departmentChart.update();
+
+                        // Update category chart
+                        categoryChart.data.labels = response.claimTypeTotals.map(c => c.ClaimName);
+                        categoryChart.data.datasets[0].data = response.claimTypeTotals.map(c => c.TotalFinancedAmount);
+                        categoryChart.data.datasets[0].backgroundColor = response.claimTypeTotals.map((_, i) => [
+                            "rgba(255, 99, 132, 0.7)",
+                            "rgba(54, 162, 235, 0.7)",
+                            "rgba(255, 206, 86, 0.7)",
+                            "rgba(75, 192, 192, 0.7)",
+                        ][i % 4]);
+                        categoryChart.update();
+
+                        // Update card values
+                        response.cardData.forEach(item => {
+                            $(`.counter-value[data-target='${item.originalValue}']`).attr('data-target', item.value);
+                            // Trigger counter animation (if using a counter plugin)
+                            $(`.counter-value[data-target='${item.value}']`).each(function () {
+                                $(this).prop('Counter', 0).animate({
+                                    Counter: item.value
+                                }, {
+                                    duration: 1000,
+                                    easing: 'swing',
+                                    step: function (now) {
+                                        $(this).text(Math.ceil(now));
+                                    }
+                                });
+                            });
+                        });
+                    },
+                    error: function (xhr) {
+                        console.error("Error fetching filtered data:", xhr);
+                    },
+                });
+            }
+            // Bind filter change events
+            $("#select-month, #select-claim-type, #select-department, #select-claim-status").on("change", updateCharts);
         });
-    });
-</script>
+    </script>
 @endpush

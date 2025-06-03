@@ -60,11 +60,10 @@ function startLoader(event) {
     const button = event.currentTarget;
     let modalSelector = button.getAttribute("data-bs-target");
 
-    
     if (!modalSelector) {
         const nearestModal = button.closest(".modal");
         if (nearestModal) {
-            modalSelector = `#${nearestModal.id}`;  
+            modalSelector = `#${nearestModal.id}`;
         }
     }
 
@@ -82,7 +81,6 @@ function startLoader(event) {
 
     let progressContainer = modal.querySelector(".progress-container");
 
-    
     if (!progressContainer) {
         progressContainer = document.createElement("div");
         progressContainer.className = "progress-container";
@@ -110,11 +108,10 @@ function endLoader(event) {
     const button = event.currentTarget;
     let modalSelector = button.getAttribute("data-bs-target");
 
-    
     if (!modalSelector) {
         const nearestModal = button.closest(".modal");
         if (nearestModal) {
-            modalSelector = `#${nearestModal.id}`;  
+            modalSelector = `#${nearestModal.id}`;
         }
     }
 
@@ -167,3 +164,14 @@ function spinEndLoader(event) {
         console.error("Loader element not found.");
     }
 }
+$(document).ready(function () {
+    $("#company").select2({
+        placeholder: "-- Select Company --",
+        allowClear: true, 
+    });
+
+    $("#financial_year").select2({
+        placeholder: "-- Select Financial Year --",
+        allowClear: true, 
+    });
+});

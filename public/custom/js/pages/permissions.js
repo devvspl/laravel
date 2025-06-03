@@ -77,17 +77,14 @@ $(document).ready(function () {
     $("#savePermissionBtn").click(function (event) {
         event.preventDefault();
         const button = event.currentTarget;
-
         const formData = {
             permission_name: document.getElementById("permissionName").value,
             group_id: document.getElementById("groupDropdown").value,
             is_active: document.getElementById("is_active").checked ? 1 : 0,
             id: $(button).data("permission-id") || null,
         };
-
         const requestType = formData.id ? "PUT" : "POST";
         const url = formData.id ? `permissions/${formData.id}` : "permissions";
-
         $.ajax({
             url: url,
             type: requestType,
@@ -133,7 +130,7 @@ $(document).ready(function () {
             },
         });
     });
-    $(".delete-permission").click(function (event) {
+    $(document).on("clcik", ".delete-permission", function (event) {
         event.preventDefault();
         const permissionId = $(this).data("id");
         const confirmation = confirm(
@@ -179,7 +176,7 @@ $(document).ready(function () {
             });
         }
     });
-    $(".edit-permission").click(function (event) {
+    $(document).on("clcik", ".edit-permission", function (event) {
         event.preventDefault();
         const permissionId = $(this).data("id");
         const button = event.currentTarget;
@@ -189,7 +186,7 @@ $(document).ready(function () {
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
-             beforeSend: function () {
+            beforeSend: function () {
                 startLoader({
                     currentTarget: button,
                 });
@@ -199,7 +196,9 @@ $(document).ready(function () {
             success: function (response) {
                 if (response.success) {
                     const permission = response.data;
-                    $("#addPermissionLabel").text("Edit Permission - " + permission.name);
+                    $("#addPermissionLabel").text(
+                        "Edit Permission - " + permission.name
+                    );
                     $("#permissionName").val(permission.name);
                     $("#groupDropdown").val(permission.permission_group_id);
                     $("#is_active").prop("checked", permission.status);
@@ -228,6 +227,49 @@ $(document).ready(function () {
                 endLoader({
                     currentTarget: button,
                 });
+            },
+        });
+    });
+    $(document).on("change", ".permission-checkbox", function () {
+        console.log('permission-checkbox');
+        const role_id = $(this).data("role-id");
+        const permission_id = $(this).data("permission-id");
+        const isChecked = $(this).is(":checked");
+        $.ajax({
+            url: "/permissions/assign",
+            type: "POST",
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8", 
+            data: {
+                role_id: role_id,
+                permission_id: permission_id,
+                isChecked: isChecked ? "1" : "0",
+                _token: $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    showAlert(
+                        "success",
+                        "ri-checkbox-circle-line",
+                        response.message || "Permission updated successfully!"
+                    );
+                } else {
+                    showAlert(
+                        "danger",
+                        "ri-error-warning-line",
+                        response.message ||
+                            "An error occurred: " +
+                                (response.message || "Unknown error")
+                    );
+                    $(this).prop("checked", !isChecked);
+                }
+            },
+            error: function (xhr) {
+                showAlert(
+                    "danger",
+                    "ri-error-warning-line",
+                    "Failed to update permission. Please try again."
+                );
+                $(this).prop("checked", !isChecked);
             },
         });
     });

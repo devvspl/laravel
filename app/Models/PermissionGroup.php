@@ -12,4 +12,9 @@ class PermissionGroup extends Model
         'created_by',
         'updated_by',
     ];
+
+    public function permissions()
+    {
+        return $this->hasMany(Permission::class, 'permission_group_id');
+    }
 }

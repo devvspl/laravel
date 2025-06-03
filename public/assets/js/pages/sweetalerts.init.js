@@ -244,7 +244,7 @@ document.getElementById("sa-basic") && document.getElementById("sa-basic").addEv
     })
 }), document.getElementById("custom-sa-success") && document.getElementById("custom-sa-success").addEventListener("click", function () {
     Swal.fire({
-        html: '<div class="mt-3"><lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon><div class="mt-4 pt-2 fs-15"><h4>Well done !</h4><p class="text-muted mx-4 mb-0">Aww yeah, you successfully read this important message.</p></div></div>',
+        html: '<div class="mt-3"><lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#001868" style="width:120px;height:120px"></lord-icon><div class="mt-4 pt-2 fs-15"><h4>Well done !</h4><p class="text-muted mx-4 mb-0">Aww yeah, you successfully read this important message.</p></div></div>',
         showCancelButton: !0,
         showConfirmButton: !1,
         customClass: {

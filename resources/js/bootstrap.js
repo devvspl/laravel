@@ -32,3 +32,27 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 //     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
 //     enabledTransports: ['ws', 'wss'],
 // });
+
+
+window._ = require('lodash');
+
+try {
+    window.axios = require('axios');
+    window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+} catch (e) {
+    console.error('Failed to load axios:', e);
+}
+
+import Echo from 'laravel-echo';
+window.Pusher = require('pusher-js');
+
+try {
+    window.Echo = new Echo({
+        broadcaster: 'pusher',
+        key: process.env.MIX_PUSHER_APP_KEY,
+        cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+        forceTLS: true
+    });
+} catch (e) {
+    console.error('Failed to initialize Laravel Echo:', e);
+}

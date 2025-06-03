@@ -8,40 +8,35 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1"><i class="ri-list-unordered"></i> Permissions List</h4>
+                        <h4 class="card-title mb-0 flex-grow-1"><i class="ri-list-unordered"></i> Financial Years List</h4>
                         <div class="flex-shrink-0">
                             <button type="button"
                                 class="btn btn-primary btn-label waves-effect waves-light rounded-pill"
-                                data-bs-toggle="modal" data-bs-target="#permissionModal" id="addPermissionBtn">
+                                data-bs-toggle="modal" data-bs-target="#FinancialYearModal" id="addFinancialYearBtn">
                                 <i class="ri-add-circle-fill label-icon align-middle rounded-pill fs-16 me-2"></i> Add
                                 New
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
-                        <table id="permissionsMasterTable"
+                        <table id="FinancialYearsMasterTable"
                             class="table nowrap dt-responsive align-middle table-hover table-bordered"
                             style="width: 100%;">
                             <thead class="table-light">
                                 <tr>
                                     <th>S No.</th>
-                                    <th>Permission</th>
-                                    <th>Group</th>
+                                    <th>Financial Year</th>
                                     <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Updated</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-
                             <tbody>
-                                @foreach ($permissions as $key => $permission)
+                                @foreach ($financialYears as $key => $financialYear)
                                     <tr>
                                         <td>{{ $key + 1 }}</td>
-                                        <td>{{ $permission->name }}</td>
-                                        <td>{{ $permission->group_name }}</td>
+                                        <td>{{ $financialYear->Year }}</td>
                                         <td>
-                                            @if ($permission->status == 1)
+                                            @if ($financialYear->Status == 'Active')
                                                 <span
                                                     class="badge bg-success-subtle text-success badge-border">Active</span>
                                             @else
@@ -49,15 +44,19 @@
                                                     class="badge bg-danger-subtle text-danger badge-border">Inactive</span>
                                             @endif
                                         </td>
-                                        <td>{{ date('d-m-Y', strtotime($permission->created_at)) }}</td>
-                                        <td>{{ date('d-m-Y', strtotime($permission->updated_at)) }}</td>
                                         <td>
-                                            <button type="button" data-bs-toggle="modal" data-bs-target="#permissionModal" id="addPermissionBtn" class="btn btn-primary btn-sm edit-permission" data-id="{{ $permission->id }}"><i class="ri-edit-2-fill"></i></button>
-                                            <button type="button" class="btn btn-danger btn-sm delete-permission" data-id="{{ $permission->id }}"><i class="ri-delete-bin-5-fill"></i></button>
+                                            <button type="button" data-bs-toggle="modal" data-bs-target="#Financial YearModal"
+                                                id="addFinancial YearBtn" class="btn btn-primary btn-sm edit-Financial Year"
+                                                data-id="{{ $financialYear->YearId }}"><i
+                                                    class="ri-edit-2-fill"></i></button>
+                                            <button type="button" class="btn btn-danger btn-sm delete-Financial Year"
+                                                data-id="{{ $financialYear->YearId }}"><i
+                                                    class="ri-delete-bin-5-fill"></i></button>
+
                                         </td>
                                     </tr>
                                 @endforeach
-                            </tbody>
+
                         </table>
                     </div>
                 </div>
@@ -65,8 +64,8 @@
         </div>
     </div>
 </div>
-<x-modal.permission />
+<x-modal.financial />
 @endsection
 @push('scripts')
-<script src="{{ asset('custom/js/pages/permissions.js') }}"></script>
+<script src="{{ asset('custom/js/pages/financial.js') }}"></script>
 @endpush

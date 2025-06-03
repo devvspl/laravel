@@ -720,25 +720,25 @@
                   <div class="form-check sidebar-setting card-radio">
                      <input class="form-check-input" type="radio" name="data-sidebar-image" id="sidebarimg-01" value="img-1">
                      <label class="form-check-label p-0 avatar-sm h-auto" for="sidebarimg-01">
-                     <img src="assets/images/sidebar/img-1.jpg" alt="" class="avatar-md w-auto object-fit-cover">
+                     <img src="{{ URL::to('/') }}/assets/images/sidebar/img-1.jpg" alt="" class="avatar-md w-auto object-fit-cover">
                      </label>
                   </div>
                   <div class="form-check sidebar-setting card-radio">
                      <input class="form-check-input" type="radio" name="data-sidebar-image" id="sidebarimg-02" value="img-2">
                      <label class="form-check-label p-0 avatar-sm h-auto" for="sidebarimg-02">
-                     <img src="assets/images/sidebar/img-2.jpg" alt="" class="avatar-md w-auto object-fit-cover">
+                     <img src="{{ URL::to('/') }}/assets/images/sidebar/img-2.jpg" alt="" class="avatar-md w-auto object-fit-cover">
                      </label>
                   </div>
                   <div class="form-check sidebar-setting card-radio">
                      <input class="form-check-input" type="radio" name="data-sidebar-image" id="sidebarimg-03" value="img-3">
                      <label class="form-check-label p-0 avatar-sm h-auto" for="sidebarimg-03">
-                     <img src="assets/images/sidebar/img-3.jpg" alt="" class="avatar-md w-auto object-fit-cover">
+                     <img src="{{ URL::to('/') }}/assets/images/sidebar/img-3.jpg" alt="" class="avatar-md w-auto object-fit-cover">
                      </label>
                   </div>
                   <div class="form-check sidebar-setting card-radio">
                      <input class="form-check-input" type="radio" name="data-sidebar-image" id="sidebarimg-04" value="img-4">
                      <label class="form-check-label p-0 avatar-sm h-auto" for="sidebarimg-04">
-                     <img src="assets/images/sidebar/img-4.jpg" alt="" class="avatar-md w-auto object-fit-cover">
+                     <img src="{{ URL::to('/') }}/assets/images/sidebar/img-4.jpg" alt="" class="avatar-md w-auto object-fit-cover">
                      </label>
                   </div>
                </div>
@@ -881,25 +881,15 @@
          </div>
       </div>
    </div>
-   <div class="offcanvas-footer border-top p-3 text-center">
-      <div class="row">
-         <div class="col-6">
-            <button type="button" class="btn btn-light w-100" id="reset-layout">Reset</button>
-         </div>
-         <div class="col-6">
-            <a href="https://1.envato.market/velzon-admin" target="_blank" class="btn btn-primary w-100">Buy Now</a>
-         </div>
-      </div>
-   </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="assets/libs/simplebar/simplebar.min.js"></script>
-<script src="assets/libs/node-waves/waves.min.js"></script>
-<script src="assets/libs/feather-icons/feather.min.js"></script>
-<script src="assets/js/pages/plugins/lord-icon-2.1.0.js"></script>
-<script src="assets/js/plugins.js"></script>
-<script src="custom/js/main.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{{ URL::to('/') }}/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{{ URL::to('/') }}/assets/libs/simplebar/simplebar.min.js"></script>
+<script src="{{ URL::to('/') }}/assets/libs/node-waves/waves.min.js"></script>
+<script src="{{ URL::to('/') }}/assets/libs/feather-icons/feather.min.js"></script>
+<script src="{{ URL::to('/') }}/assets/js/pages/plugins/lord-icon-2.1.0.js"></script>
+<script src="{{ URL::to('/') }}/assets/js/plugins.js"></script>
+<script src="{{ URL::to('/') }}/custom/js/main.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
@@ -912,6 +902,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
 
  @stack('scripts')
-<script src="assets/js/app.js"></script>
+<script src="{{ URL::to('/') }}/assets/js/app.js"></script>
 </body>
 </html>
