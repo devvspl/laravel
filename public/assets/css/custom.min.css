@@ -1,5 +1,5 @@
 input[readonly="readonly"] {
-    background-color: #f3f3f9 !important;
+    background-color: #ffffff !important;
     border: 1px solid #88888863 !important;
     color: #6c7279 !important;
 }
@@ -125,20 +125,23 @@ div.dataTables_wrapper div.dataTables_processing {
 .select2-container--default
     .select2-selection--single
     .select2-selection__rendered {
-        color: #212529 !important;
+    color: #212529 !important;
     line-height: 36px !important;
 }
-.select2-container--default .select2-selection--single .select2-selection__clear {
+.select2-container--default
+    .select2-selection--single
+    .select2-selection__clear {
     cursor: pointer;
-    color:#888888 !important;
+    color: #888888 !important;
     float: right;
     font-weight: bold;
     height: 26px;
     margin-right: 20px;
     padding-right: 0px;
 }
-.select2-container--default .select2-selection--single .select2-selection__clear
- {
+.select2-container--default
+    .select2-selection--single
+    .select2-selection__clear {
     cursor: pointer;
     float: right;
     font-weight: bold;
@@ -203,6 +206,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
     vertical-align: bottom;
     white-space: nowrap;
 }
+
 .select2-container--default
     .select2-selection--multiple
     .select2-selection__choice__remove {
@@ -221,6 +225,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
     top: 0;
 }
 
-#scrollbar .menu-dropdown .nav .nav-item{
+#scrollbar .menu-dropdown .nav .nav-item {
     width: 100%;
+}
+.select2-results__option.deactivated {
+    color: red !important;
 }

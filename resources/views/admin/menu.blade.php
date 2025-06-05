@@ -46,7 +46,7 @@
                                                 @can('Delete Menu')
                                                     <button type="button" class="btn btn-danger btn-sm delete-menu"
                                                         data-id="{{ $menu->id }}"><i
-                                                            class="ri-delete-bin-5-fill"></i></button>
+                                                        class="ri-delete-bin-5-fill"></i></button>
                                                 @endcan
 
                                             </td>

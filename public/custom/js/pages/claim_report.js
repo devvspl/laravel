@@ -1,108 +1,250 @@
 $(document).ready(function () {
-    $("#claimReportTable").DataTable({
-        ordering: false,
-        searching: true,
-        paging: true,
-        info: true,
-        lengthChange: true,
-        pageLength: 10,
-        lengthMenu: [10, 25, 50, 100],
+    const fromPicker = flatpickr("#fromDate", {
+        dateFormat: "Y-m-d",
+        disable: [],
+        enableYearSelection: true,
+        onReady: function () {
+            this.isDisabled = false;
+        },
     });
-    $('#functionSelect, #verticalSelect, #departmentSelect, #userSelect, #monthSelect, #claimTypeSelect, #claimStatusSelect').select2({
-            width: '100%',
-            placeholder: "Select options",
-            allowClear: true
+
+    const toPicker = flatpickr("#toDate", {
+        dateFormat: "Y-m-d",
+        disable: [],
+        enableYearSelection: true,
+        onReady: function () {
+            this.isDisabled = false;
+        },
+    });
+
+    $(
+        "#functionSelect, #verticalSelect, #departmentSelect, #userSelect, #monthSelect, #claimTypeSelect, #claimStatusSelect, #policySelect, #wheelerTypeSelect, #vehicleTypeSelect"
+    ).select2({
+        width: "100%",
+        placeholder: "Select options",
+        allowClear: true,
+    });
+
+    $(document).on("change", "#departmentSelect", function () {
+        let selectedDepartments = $(this).val() || [];
+        $.ajax({
+            url: "employees/by-department",
+            type: "POST",
+            data: JSON.stringify({ department_ids: selectedDepartments }),
+            contentType: "application/json",
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    let userOptions = "";
+                    response.data.forEach((employee) => {
+                        let fullName = `${employee.Fname} ${
+                            employee.Sname || ""
+                        } ${employee.Lname}`.trim();
+                        let optionText = `${employee.EmpCode} - ${fullName}`;
+                        let statusClass =
+                            employee.EmpStatus === "D" ? "deactivated" : "";
+                        userOptions += `<option value="${employee.EmpCode}" data-status="${employee.EmpStatus}" class="${statusClass}">${optionText}</option>`;
+                    });
+                    $("#userSelect").html(
+                        userOptions ||
+                            '<option value="">No users available</option>'
+                    );
+
+                    $("#userSelect").select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+                } else {
+                    console.error("Failed to fetch users:", response.message);
+                    $("#userSelect").html(
+                        '<option value="">Select options</option>'
+                    );
+                    $("#userSelect").select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+                }
+            },
+            error: function (xhr) {
+                console.error("Error fetching users:", xhr.responseText);
+                $("#userSelect").html(
+                    '<option value="">Error loading users</option>'
+                );
+                $("#userSelect").select2({
+                    placeholder: "Select options",
+                    allowClear: true,
+                    width: "100%",
+                });
+            },
         });
+    });
 
-        // Ensure DOM elements exist before initializing Flatpickr
-        const fromDateElement = document.querySelector('#fromDate');
-        const toDateElement = document.querySelector('#toDate');
+    let table = null;
 
-        if (!fromDateElement || !toDateElement) {
-            console.error('Flatpickr elements not found in the DOM');
-            return;
+    function initializeDataTable(buttonElement = null) {
+        if ($.fn.DataTable.isDataTable("#claimReportTable")) {
+            table.destroy();
+            $("#claimReportTable").empty();
         }
 
-        // Initialize Flatpickr for date pickers without default date and with year selection
-        const fromPicker = flatpickr(fromDateElement, {
-            dateFormat: "Y-m-d",
-            // No defaultDate, so the field starts empty
-            disable: [], // Initially enabled, will be toggled
-            enableYearSelection: true, // Enable year dropdown
-            minDate: "2000-01-01", // Optional: Set a minimum year for the dropdown
-            maxDate: "2030-12-31", // Optional: Set a maximum year for the dropdown
-            onReady: function() {
-                this.isDisabled = true; // Custom property to track disabled state
-            }
+        table = $("#claimReportTable").DataTable({
+            ordering: false,
+            searching: true,
+            paging: true,
+            serverSide: true,
+            processing: true,
+            info: true,
+            lengthChange: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            ajax: {
+                url: "filter-claims",
+                type: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
+                },
+                data: function (d) {
+                    d.function_ids = $("#functionSelect").val() || [];
+                    d.vertical_ids = $("#verticalSelect").val() || [];
+                    d.department_ids = $("#departmentSelect").val() || [];
+                    d.user_ids = $("#userSelect").val() || [];
+                    d.months = $("#monthSelect").val() || [];
+                    d.claim_type_ids = $("#claimTypeSelect").val() || [];
+                    d.claim_statuses = $("#claimStatusSelect").val() || [];
+                    d.from_date = $("#fromDate").val();
+                    d.to_date = $("#toDate").val();
+                    d.date_type = $('input[name="dateType"]:checked').val();
+                    d.policy_ids = $("#policySelect").val() || [];
+                    d.wheeler_type = $("#wheelerTypeSelect").val() || [];
+                    d.vehicle_types = $("#vehicleTypeSelect").val() || [];
+                },
+                beforeSend: function () {
+                    startSimpleLoader({ currentTarget: buttonElement });
+                },
+                complete: function () {
+                    endSimpleLoader({ currentTarget: buttonElement });
+                },
+                error: function (xhr) {
+                    console.error("Error fetching claims:", xhr.responseText);
+                    endSimpleLoader({ currentTarget: buttonElement });
+                },
+            },
+            columns: [
+                { data: "Sn", name: "Sn" },
+                { data: "ExpId" },
+                { data: "ClaimType" },
+                { data: "EmpName" },
+                { data: "EmpCode" },
+                {
+                    data: "ClaimMonth",
+                    render: function (data) {
+                        const monthNames = [
+                            "January",
+                            "February",
+                            "March",
+                            "April",
+                            "May",
+                            "June",
+                            "July",
+                            "August",
+                            "September",
+                            "October",
+                            "November",
+                            "December",
+                        ];
+                        return data
+                            ? monthNames[parseInt(data) - 1] || data
+                            : "-";
+                    },
+                },
+                { data: "UploadDate" },
+                { data: "BillDate" },
+                { data: "ClaimedAmount" },
+                {
+                    data: "ClaimStatus",
+                    render: function (data) {
+                        let badgeClass = "badge bg-secondary";
+                        switch (data) {
+                            case "Saved":
+                            case "Draft":
+                                badgeClass = "badge bg-warning";
+                                break;
+                            case "Submitted":
+                                badgeClass = "badge bg-info";
+                                break;
+                            case "Filled":
+                            case "Paid":
+                                badgeClass = "badge bg-success";
+                                break;
+                            case "Approved":
+                                badgeClass = "badge bg-primary";
+                                break;
+                        }
+                        return `<span class="${badgeClass}">${
+                            data || "Unknown"
+                        }</span>`;
+                    },
+                },
+                {
+                    data: null,
+                    render: function () {
+                        return '<button class="btn btn-sm btn-primary">View</button>';
+                    },
+                },
+            ],
         });
+    }
 
-        const toPicker = flatpickr(toDateElement, {
-            dateFormat: "Y-m-d",
-            // No defaultDate, so the field starts empty
-            disable: [],
-            enableYearSelection: true, // Enable year dropdown
-            minDate: "2000-01-01", // Optional: Set a minimum year for the dropdown
-            maxDate: "2030-12-31", // Optional: Set a maximum year for the dropdown
-            onReady: function() {
-                this.isDisabled = true; // Custom property to track disabled state
-            }
-        });
+    const searchButton = document.getElementById("searchButton");
+    if (searchButton) {
+        initializeDataTable(searchButton);
+    } else {
+        console.warn("Search button not found. DataTable not initialized.");
+    }
 
-        // Function to toggle Flatpickr enable/disable state
-        function togglePicker(picker, enable) {
-            if (enable) {
-                picker.set('disable', []);
-                picker.isDisabled = false;
-                picker.element.removeAttribute('readonly');
-            } else {
-                picker.set('disable', [() => true]); // Disable all dates
-                picker.isDisabled = true;
-                picker.element.setAttribute('readonly', 'readonly');
-            }
+    $("#searchButton").on("click", function () {
+        if (table) {
+            startSimpleLoader({
+                currentTarget: this,
+            });
+
+            table.ajax.reload(function () {
+                endSimpleLoader({
+                    currentTarget: document.getElementById("searchButton"),
+                });
+            });
+        } else {
+            console.warn("DataTable not initialized. Initializing now.");
+            initializeDataTable(this);
         }
+    });
 
-        // Function to update date range based on selected months
-        function updateDateRange() {
-            const selectedMonths = $('#monthSelect').val();
-            const year = 2025; // Adjust dynamically if needed
+    $("#exportExcel").on("click", function () {
+        // Gather filter values
+        var filters = {
+            functions: $("#functionSelect").val(),
+            verticals: $("#verticalSelect").val(),
+            departments: $("#departmentSelect").val(),
+            users: $("#userSelect").val(),
+            months: $("#monthSelect").val(),
+            claimTypes: $("#claimTypeSelect").val(),
+            claimStatuses: $("#claimStatusSelect").val(),
+            policies: $("#policySelect").val(),
+            vehicleTypes: $("#vehicleTypeSelect").val(),
+            wheelerTypes: $("#wheelerTypeSelect").val(),
+            fromDate: $("#fromDate").val(),
+            toDate: $("#toDate").val(),
+            dateType: $('input[name="dateType"]:checked').val(),
+        };
 
-            if (selectedMonths && selectedMonths.length > 0 && !$('#customDate').is(':checked')) {
-                // Sort selected months numerically
-                const sortedMonths = selectedMonths.map(Number).sort((a, b) => a - b);
-                const firstMonth = sortedMonths[0];
-                const lastMonth = sortedMonths[sortedMonths.length - 1];
-
-                // Set From date to the first day of the first selected month
-                const from = new Date(year, firstMonth - 1, 1);
-                fromPicker.setDate(from, true);
-
-                // Set To date to the last day of the last selected month
-                const to = new Date(year, lastMonth, 0);
-                toPicker.setDate(to, true);
-
-                // Disable date pickers when months are selected
-                togglePicker(fromPicker, false);
-                togglePicker(toPicker, false);
-            } else {
-                // Enable date pickers if no months are selected or custom date is chosen
-                togglePicker(fromPicker, true);
-                togglePicker(toPicker, true);
-            }
-        }
-
-        // Update date range when month selection changes
-        $('#monthSelect').on('change', updateDateRange);
-
-        // Enable/disable date pickers based on Custom Date selection
-        $('input[name="dateType"]').on('change', function() {
-            if ($('#customDate').is(':checked')) {
-                togglePicker(fromPicker, true);
-                togglePicker(toPicker, true);
-            } else {
-                updateDateRange();
-            }
-        });
-
-        // Initial update of date range
-        updateDateRange();
+        // Construct the URL with query parameters
+        var url = "claim-report.export?" + $.param(filters);
+        window.location.href = url;
+    });
 });

@@ -9,12 +9,24 @@ use App\Http\Controllers\admin\SettingController;
 use App\Http\Controllers\admin\ReportController;
 use App\Http\Controllers\admin\FinancialYearController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
-Route::get('/', function () {
+Route::get('', function () {
     return view('welcome');
 });
+Route::get('/clear-all-cache', function () {
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    Artisan::call('view:clear');
+    Artisan::call('optimize:clear'); 
+
+    return response()->json([
+        'message' => 'All caches cleared successfully.'
+    ]);
+});
 Auth::routes();
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::middleware('auth')->group(function () {
     Route::resource('permissions', PermissionController::class);
     Route::resource('permission-groups', PermissionGroupController::class);
@@ -37,6 +49,15 @@ Route::middleware('auth')->group(function () {
     Route::get('get-company-config/{id}', [SettingController::class, 'getCompanyConfig']);
     Route::post('save-config', [SettingController::class, 'saveCompanyConfig']);
     Route::get('claim-report', [ReportController::class, 'claimReport'])->name('claim-report');
+    Route::get('claim-report', [ReportController::class, 'claimReport'])->name('admin.claim_report');
+    Route::get('/claim-report', [ReportController::class, 'claimReport'])->name('admin.claim_report');
+    Route::get('/functions', [ReportController::class, 'getFunction']);
+    Route::get('/verticals', [ReportController::class, 'getVertical']);
+    Route::get('/departments', [ReportController::class, 'getDepartment']);
+    Route::post('/employees/by-department', [ReportController::class, 'getEmployeesByDepartment']);
+    Route::get('/claim-types', [ReportController::class, 'getClaimTypes']);
+    Route::post('/filter-claims', [ReportController::class, 'filterClaims']);
+    Route::get('/claim-report/export', [ReportController::class, 'export']);
 
 });
-Route::get('/overview', [DashboardController::class, 'overview'])->name('overview');
+Route::get('overview', [DashboardController::class, 'overview'])->name('overview');

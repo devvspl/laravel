@@ -164,6 +164,26 @@ function spinEndLoader(event) {
         console.error("Loader element not found.");
     }
 }
+function startSimpleLoader(event) {
+    const button = event.currentTarget;
+    const icon = button.querySelector(".label-icon");
+    const loader = button.querySelector(".loader");
+
+    button.disabled = true;
+    if (icon) icon.classList.remove("ri-check-double-line");
+    if (loader) loader.style.display = "inline-block";
+}
+
+function endSimpleLoader(event) {
+    const button = event.currentTarget;
+    const icon = button.querySelector(".label-icon");
+    const loader = button.querySelector(".loader");
+
+    button.disabled = false;
+    if (icon) icon.classList.add("ri-check-double-line");
+    if (loader) loader.style.display = "none";
+}
+
 $(document).ready(function () {
     $("#company").select2({
         placeholder: "-- Select Company --",

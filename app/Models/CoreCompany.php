@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CoreCompany extends Model
 {
-    protected $connection = 'secondary';
+    protected $connection = 'hrims';
     protected $table = 'core_company';
     protected $primaryKey = 'id';
     public $timestamps = false;
