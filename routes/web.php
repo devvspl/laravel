@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/employees/by-department', [ReportController::class, 'getEmployeesByDepartment']);
     Route::get('/claim-types', [ReportController::class, 'getClaimTypes']);
     Route::post('/filter-claims', [ReportController::class, 'filterClaims']);
-    Route::get('/claim-report/export', [ReportController::class, 'export']);
+    Route::post('/expense-claims/export', [ReportController::class, 'export'])->name('expense-claims.export');
 
 });
 Route::get('overview', [DashboardController::class, 'overview'])->name('overview');

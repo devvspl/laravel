@@ -13,6 +13,8 @@ use App\Models\ClaimType;
 use App\Models\ExpenseClaim;
 use App\Exports\ClaimReportExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -137,7 +139,7 @@ class ReportController extends Controller
     public function filterClaims(Request $request)
     {
         try {
-            $perPage = $request->input('length', 50);
+            $perPage = $request->input('length', 10);
             $start = $request->input('start', 0);
             $page = floor($start / $perPage) + 1;
 
@@ -158,46 +160,48 @@ class ReportController extends Controller
             ];
 
             $query = ExpenseClaim::select([
-                'y7_expenseclaims.ExpId as ExpId',
+                DB::raw('DISTINCT y7_expenseclaims.ExpId as ExpId'),
                 'y7_expenseclaims.ClaimId as ClaimID',
                 'claimtype.ClaimName as ClaimType',
-                \DB::raw("CONCAT(hrims.hrm_employee.Fname, ' ', COALESCE(hrims.hrm_employee.Sname, ''), ' ', hrims.hrm_employee.Lname) as EmpName"),
+                DB::raw("CONCAT(hrims.hrm_employee.Fname, ' ', COALESCE(hrims.hrm_employee.Sname, ''), ' ', hrims.hrm_employee.Lname) as EmpName"),
                 'hrims.hrm_employee.EmpCode',
+                'hrims.core_functions.function_name as FunctionName',
+                'hrims.core_verticals.vertical_name as VerticalName',
+                'hrims.core_departments.department_name as DepartmentName',
+                'hrims.hrm_master_eligibility_policy.PolicyName as PolicyName',
+                'hrims.hrm_employee_eligibility.VehicleType as VehicleType',
                 'y7_expenseclaims.ClaimMonth',
                 'y7_expenseclaims.CrDate as UploadDate',
                 'y7_expenseclaims.BillDate',
                 'y7_expenseclaims.FilledTAmt as ClaimedAmount',
-                'y7_expenseclaims.ClaimStatus'
+                'y7_expenseclaims.ClaimAtStep as ClaimStatus'
             ])
                 ->leftJoin('claimtype', 'y7_expenseclaims.ClaimId', '=', 'claimtype.ClaimId')
                 ->join('hrims.hrm_employee', 'y7_expenseclaims.FilledBy', '=', 'hrims.hrm_employee.EmployeeID')
                 ->join('hrims.hrm_employee_general', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_general.EmployeeID')
                 ->join('hrims.hrm_employee_eligibility', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_eligibility.EmployeeID')
-                ->join('hrims.core_departments', 'hrims.hrm_employee_general.DepartmentId', '=', 'hrims.core_departments.id');
+                ->join('hrims.core_departments', 'hrims.hrm_employee_general.DepartmentId', '=', 'hrims.core_departments.id')
+                ->leftJoin('hrims.core_functions', 'hrims.hrm_employee_general.EmpFunction', '=', 'hrims.core_functions.id')
+                ->leftJoin('hrims.core_verticals', 'hrims.hrm_employee_general.EmpVertical', '=', 'hrims.core_verticals.id')
+                ->leftJoin('hrims.hrm_master_eligibility_policy', 'hrims.hrm_employee_eligibility.VehiclePolicy', '=', 'hrims.hrm_master_eligibility_policy.PolicyId');
 
             // Apply Filters
             if (!empty($filters['function_ids'])) {
                 $query->whereIn('hrims.hrm_employee_general.EmpFunction', $filters['function_ids']);
             }
-
             if (!empty($filters['vertical_ids'])) {
                 $query->whereIn('hrims.hrm_employee_general.EmpVertical', $filters['vertical_ids']);
             }
-
             if (!empty($filters['department_ids'])) {
                 $query->whereIn('hrims.hrm_employee_general.DepartmentId', $filters['department_ids']);
             }
-
             if (!empty($filters['user_ids'])) {
                 $query->whereIn('hrims.hrm_employee.EmpCode', $filters['user_ids']);
             }
-
             if (!empty($filters['months'])) {
                 $query->whereIn('y7_expenseclaims.ClaimMonth', $filters['months']);
             }
-
             if (!empty($filters['claim_type_ids'])) {
-                // Special condition for claim type ID 7 (vehicle claim)
                 if (in_array(7, $filters['claim_type_ids'])) {
                     $query->where('y7_expenseclaims.ClaimId', 7);
                     if (!empty($filters['wheeler_type'])) {
@@ -207,19 +211,15 @@ class ReportController extends Controller
                     $query->whereIn('y7_expenseclaims.ClaimId', $filters['claim_type_ids']);
                 }
             }
-
             if (!empty($filters['policy_ids'])) {
                 $query->whereIn('hrims.hrm_employee_eligibility.VehiclePolicy', $filters['policy_ids']);
             }
-
             if (!empty($filters['vehicle_types'])) {
                 $query->whereIn('hrims.hrm_employee_eligibility.VehicleType', $filters['vehicle_types']);
             }
-
             if (!empty($filters['claim_statuses'])) {
                 $query->whereIn('y7_expenseclaims.ClaimAtStep', $filters['claim_statuses']);
             }
-
             if ($filters['from_date'] && $filters['to_date']) {
                 $dateColumn = match ($filters['date_type']) {
                     'billDate' => 'BillDate',
@@ -230,7 +230,7 @@ class ReportController extends Controller
                 $query->whereBetween('y7_expenseclaims.' . $dateColumn, [$filters['from_date'], $filters['to_date']]);
             }
 
-            $totalRecords = $query->count();
+            $totalRecords = $query->count(DB::raw('DISTINCT y7_expenseclaims.ExpId'));
 
             $claims = $query->skip($start)->take($perPage)->get();
 
@@ -245,32 +245,64 @@ class ReportController extends Controller
                 "data" => $claims,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Claim Filter Error: ' . $e->getMessage());
+            Log::error('Claim Filter Error: ' . $e->getMessage());
             return response()->json(['error' => 'Error filtering claims: ' . $e->getMessage()], 500);
         }
     }
 
     public function export(Request $request)
     {
+        // Increase execution time
+        ini_set('max_execution_time', 300); // 5 minutes
+        ini_set('memory_limit', '512M'); // Increase memory limit
+
         $filters = [
-            'functions' => $request->query('functions', []),
-            'verticals' => $request->query('verticals', []),
-            'departments' => $request->query('departments', []),
-            'users' => $request->query('users', []),
-            'months' => $request->query('months', []),
-            'claimTypes' => $request->query('claimTypes', []),
-            'claimStatuses' => $request->query('claimStatuses', []),
-            'policies' => $request->query('policies', []),
-            'vehicleTypes' => $request->query('vehicleTypes', []),
-            'wheelerTypes' => $request->query('wheelerTypes', []),
-            'fromDate' => $request->query('fromDate'),
-            'toDate' => $request->query('toDate'),
-            'dateType' => $request->query('dateType'),
+            'functionSelect' => $request->input('functionSelect', []),
+            'verticalSelect' => $request->input('verticalSelect', []),
+            'departmentSelect' => $request->input('departmentSelect', []),
+            'userSelect' => $request->input('userSelect', []),
+            'monthSelect' => $request->input('monthSelect', []),
+            'claimTypeSelect' => $request->input('claimTypeSelect', []),
+            'claimStatusSelect' => $request->input('claimStatusSelect', []),
+            'fromDate' => $request->input('fromDate'),
+            'toDate' => $request->input('toDate'),
+            'dateType' => $request->input('dateType', 'billDate'),
+            'policySelect' => $request->input('policySelect', []),
+            'vehicleTypeSelect' => $request->input('vehicleTypeSelect', []),
+            'wheelerTypeSelect' => $request->input('wheelerTypeSelect', []),
         ];
 
-        return Excel::download(new ClaimReportExport($filters), 'claim-report.xlsx');
+        $columns = $request->input('columns', []);
+
+        if (empty($columns)) {
+            return response()->json(['error' => 'No columns selected for export'], 400);
+        }
+
+        // Log query for debugging
+        DB::enableQueryLog();
+        try {
+            $export = new ClaimReportExport($filters, $columns);
+            $query = $export->query();
+            $start = microtime(true);
+            $query->count(); // Test query performance
+            $duration = microtime(true) - $start;
+            Log::info('Export query executed', [
+                'duration' => $duration,
+                'query' => DB::getQueryLog(),
+                'filters' => $filters,
+                'columns' => $columns,
+            ]);
+
+            return Excel::download($export, 'expense_claims_' . date('Ymd_His') . '.xlsx');
+        } catch (\Exception $e) {
+            Log::error('Export failed', [
+                'error' => $e->getMessage(),
+                'query' => DB::getQueryLog(),
+                'filters' => $filters,
+                'columns' => $columns,
+            ]);
+            return response()->json(['error' => 'Export failed: ' . $e->getMessage()], 500);
+        }
     }
-
-
 
 }

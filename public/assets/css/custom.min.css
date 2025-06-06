@@ -231,3 +231,14 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
 .select2-results__option.deactivated {
     color: red !important;
 }
+#additionalFilters {
+    transition: all 0.3s ease-in-out;
+}
+
+.ri-equalizer-line {
+    transition: transform 0.3s ease;
+}
+
+#additionalFilters.show + .ri-equalizer-line {
+    transform: rotate(90deg);
+}

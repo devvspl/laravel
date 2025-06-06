@@ -45,7 +45,7 @@ $(document).ready(function () {
                         let optionText = `${employee.EmpCode} - ${fullName}`;
                         let statusClass =
                             employee.EmpStatus === "D" ? "deactivated" : "";
-                        userOptions += `<option value="${employee.EmpCode}" data-status="${employee.EmpStatus}" class="${statusClass}">${optionText}</option>`;
+                        userOptions += `<option value="${employee.EmployeeID}" data-status="${employee.EmpStatus}" class="${statusClass}">${optionText}</option>`;
                     });
                     $("#userSelect").html(
                         userOptions ||
@@ -225,26 +225,126 @@ $(document).ready(function () {
         }
     });
 
-    $("#exportExcel").on("click", function () {
-        // Gather filter values
-        var filters = {
-            functions: $("#functionSelect").val(),
-            verticals: $("#verticalSelect").val(),
-            departments: $("#departmentSelect").val(),
-            users: $("#userSelect").val(),
-            months: $("#monthSelect").val(),
-            claimTypes: $("#claimTypeSelect").val(),
-            claimStatuses: $("#claimStatusSelect").val(),
-            policies: $("#policySelect").val(),
-            vehicleTypes: $("#vehicleTypeSelect").val(),
-            wheelerTypes: $("#wheelerTypeSelect").val(),
+    $("#exportModal").on("show.bs.modal", function () {
+        var modalFilters = $("#modalFilters");
+    });
+
+    $("#exportExcelBtn").on("click", function (e) {
+        const button = this;
+        const columns = $(".column-checkbox:checked")
+            .map(function () {
+                return this.value;
+            })
+            .get();
+
+        const filters = {
+            functionSelect: $("#functionSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            verticalSelect: $("#verticalSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            departmentSelect: $("#departmentSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            userSelect: $("#userSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            monthSelect: $("#monthSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            claimTypeSelect: $("#claimTypeSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            claimStatusSelect: $("#claimStatusSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
             fromDate: $("#fromDate").val(),
             toDate: $("#toDate").val(),
-            dateType: $('input[name="dateType"]:checked').val(),
+            dateType: $('input[name="dateType"]:checked').val() || "billDate",
+            policySelect: $("#policySelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            wheelerTypeSelect: $("#wheelerTypeSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
+            vehicleTypeSelect: $("#vehicleTypeSelect option:selected")
+                .map(function () {
+                    return this.value;
+                })
+                .get(),
         };
 
-        // Construct the URL with query parameters
-        var url = "claim-report.export?" + $.param(filters);
-        window.location.href = url;
+        if (columns.length === 0) {
+            alert("Please select at least one column to export.");
+            return;
+        }
+
+        $.ajax({
+            url: "/expense-claims/export",
+            method: "POST",
+            data: JSON.stringify({ columns, ...filters }),
+            contentType: "application/json",
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            xhrFields: {
+                responseType: "blob",
+            },
+            beforeSend: function () {
+                startLoader({ currentTarget: button });
+            },
+            success: function (data, status, xhr) {
+                if (
+                    xhr
+                        .getResponseHeader("content-type")
+                        .includes("application/json")
+                ) {
+                    data.text().then((text) => {
+                        const response = JSON.parse(text);
+                        alert(response.error || "Export failed.");
+                    });
+                    return;
+                }
+                const url = window.URL.createObjectURL(data);
+                const a = $("<a>", {
+                    href: url,
+                    download: `expense_claims_${new Date()
+                        .toISOString()
+                        .replace(/[:.]/g, "")}.xlsx`,
+                }).appendTo("body");
+                a[0].click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                $("#exportModal").modal("hide");
+            },
+            error: function (xhr, status, error) {
+                console.error("Export error:", error);
+                alert(
+                    "Failed to export data. Please try again or contact support."
+                );
+            },
+            complete: function () {
+                endLoader({ currentTarget: button });
+            },
+        });
     });
 });
