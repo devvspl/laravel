@@ -193,7 +193,7 @@ $(document).ready(function () {
 
         let userPermissions = [];
         $.ajax({
-            url: `http://127.0.0.1:8000/users/${userId}/permissions`,
+            url: `users/${userId}/permissions`,
             type: "GET",
             dataType: "json",
             headers: {
@@ -312,7 +312,7 @@ $(document).ready(function () {
         });
 
         $.ajax({
-            url: "http://127.0.0.1:8000/permissions-list",
+            url: "permissions-list",
             type: "GET",
             dataType: "json",
             headers: {
@@ -414,8 +414,8 @@ $(document).ready(function () {
         const permissionId = $(this).data("permission-id");
         const isChecked = $(this).is(":checked");
         const actionUrl = isChecked
-            ? `http://127.0.0.1:8000/users/${userId}/permissions/assign`
-            : `http://127.0.0.1:8000/users/${userId}/permissions/revoke`;
+            ? `users/${userId}/permissions/assign`
+            : `users/${userId}/permissions/revoke`;
 
         $.ajax({
             url: actionUrl,

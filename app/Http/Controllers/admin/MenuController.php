@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Menu;
 use App\Http\Requests\StoreMenuRequest;
 use App\Http\Requests\UpdateMenuRequest;
+ use Illuminate\Support\Str;
 class MenuController extends Controller
 {
     /**
@@ -29,11 +30,15 @@ class MenuController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+   
+
     public function store(StoreMenuRequest $request)
     {
         $validated = $request->validated();
-        $menu = Menu::create(attributes: [
+
+        $menu = Menu::create([
             'title' => $validated['menu_name'],
+            'data_key' => Str::kebab($validated['menu_name']), 
             'parent_id' => $validated['parent_id'],
             'icon' => $validated['icon'],
             'order' => $validated['order'],
@@ -43,9 +48,10 @@ class MenuController extends Controller
             'created_by' => auth()->id(),
             'updated_by' => auth()->id(),
         ]);
-        return $this->jsonSuccess($menu, 'Menu created successfully.');
 
+        return $this->jsonSuccess($menu, 'Menu created successfully.');
     }
+
 
     /**
      * Display the specified resource.

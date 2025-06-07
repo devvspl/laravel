@@ -1,4 +1,6 @@
 $(document).ready(function () {
+
+    $("#reportType").select2({dropdownParent: $("#exportModal"),});
     const fromPicker = flatpickr("#fromDate", {
         dateFormat: "Y-m-d",
         disable: [],
@@ -17,9 +19,7 @@ $(document).ready(function () {
         },
     });
 
-    $(
-        "#functionSelect, #verticalSelect, #departmentSelect, #userSelect, #monthSelect, #claimTypeSelect, #claimStatusSelect, #policySelect, #wheelerTypeSelect, #vehicleTypeSelect"
-    ).select2({
+    $("#functionSelect, #verticalSelect, #departmentSelect, #userSelect, #monthSelect, #claimTypeSelect, #claimStatusSelect, #policySelect, #wheelerTypeSelect, #vehicleTypeSelect").select2({
         width: "100%",
         placeholder: "Select options",
         allowClear: true,
@@ -194,7 +194,7 @@ $(document).ready(function () {
                 {
                     data: null,
                     render: function () {
-                        return '<button class="btn btn-sm btn-primary">View</button>';
+                        return '<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#claimDetailModal" id="viewClaimDetail"><i class="ri-eye-fill"></i></button>';
                     },
                 },
             ],
@@ -293,6 +293,9 @@ $(document).ready(function () {
                 .get(),
         };
 
+        // Add report type to the payload
+        const reportType = $("#reportType").val();
+
         if (columns.length === 0) {
             alert("Please select at least one column to export.");
             return;
@@ -301,7 +304,7 @@ $(document).ready(function () {
         $.ajax({
             url: "/expense-claims/export",
             method: "POST",
-            data: JSON.stringify({ columns, ...filters }),
+            data: JSON.stringify({ columns, reportType, ...filters }),
             contentType: "application/json",
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),

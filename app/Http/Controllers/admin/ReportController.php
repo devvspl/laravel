@@ -12,19 +12,18 @@ use App\Models\EligibilityPolicy;
 use App\Models\ClaimType;
 use App\Models\ExpenseClaim;
 use App\Exports\ClaimReportExport;
+use App\Exports\ClaimTypeWiseClaimReportExport;
+use App\Exports\DepartmentWiseClaimReportExport;
+use App\Exports\MonthWiseClaimReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
-    /**
-     * Display the claim report view with filter options.
-     */
     public function claimReport()
     {
         try {
-
             $functions = CoreFunctions::where('is_active', 1)->get(['id', 'function_name']);
             $verticals = CoreVertical::where('is_active', 1)->get(['id', 'vertical_name']);
             $departments = CoreDepartments::where('is_active', 1)->get(['id', 'department_name']);
@@ -39,58 +38,13 @@ class ReportController extends Controller
                 ->join('hrims.hrm_employee_general', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_general.EmployeeID')
                 ->get();
             $claimTypes = ClaimType::where('ClaimStatus', 'A')->get(['ClaimId', 'ClaimName']);
-
             $eligibility_policy = EligibilityPolicy::where('CompanyId', session('company_id'))->get(['PolicyId', 'PolicyName']);
-
-
             return view('admin.claim_report', compact('functions', 'verticals', 'departments', 'employees', 'claimTypes', 'eligibility_policy'));
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Error loading claim report: ' . $e->getMessage()]);
         }
     }
 
-    /**
-     * Fetch active functions (kept for potential other uses).
-     */
-    public function getFunction()
-    {
-        try {
-            $functions = CoreFunctions::where('is_active', 1)->get();
-            return $this->jsonSuccess($functions, 'Functions fetched successfully.');
-        } catch (\Exception $e) {
-            return $this->jsonError('Error fetching functions: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Fetch active verticals.
-     */
-    public function getVertical()
-    {
-        try {
-            $verticals = CoreVertical::where('is_active', 1)->get();
-            return $this->jsonSuccess($verticals, 'Verticals fetched successfully.');
-        } catch (\Exception $e) {
-            return $this->jsonError('Error fetching verticals: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Fetch active departments.
-     */
-    public function getDepartment()
-    {
-        try {
-            $departments = CoreDepartments::where('is_active', 1)->get();
-            return $this->jsonSuccess($departments, 'Departments fetched successfully.');
-        } catch (\Exception $e) {
-            return $this->jsonError('Error fetching departments: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Fetch employees by department IDs.
-     */
     public function getEmployeesByDepartment(Request $request)
     {
         try {
@@ -119,23 +73,6 @@ class ReportController extends Controller
         }
     }
 
-
-    /**
-     * Fetch active claim types.
-     */
-    public function getClaimTypes()
-    {
-        try {
-            $claimTypes = ClaimType::where('ClaimStatus', 'A')->get();
-            return $this->jsonSuccess($claimTypes, 'Claim types fetched successfully.');
-        } catch (\Exception $e) {
-            return $this->jsonError('Error fetching claim types: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Filter claims based on search parameters.
-     */
     public function filterClaims(Request $request)
     {
         try {
@@ -185,7 +122,6 @@ class ReportController extends Controller
                 ->leftJoin('hrims.core_verticals', 'hrims.hrm_employee_general.EmpVertical', '=', 'hrims.core_verticals.id')
                 ->leftJoin('hrims.hrm_master_eligibility_policy', 'hrims.hrm_employee_eligibility.VehiclePolicy', '=', 'hrims.hrm_master_eligibility_policy.PolicyId');
 
-            // Apply Filters
             if (!empty($filters['function_ids'])) {
                 $query->whereIn('hrims.hrm_employee_general.EmpFunction', $filters['function_ids']);
             }
@@ -250,48 +186,45 @@ class ReportController extends Controller
         }
     }
 
+
+
+
     public function export(Request $request)
     {
-        // Increase execution time
-        ini_set('max_execution_time', 300); // 5 minutes
-        ini_set('memory_limit', '512M'); // Increase memory limit
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
 
         $filters = [
-            'functionSelect' => $request->input('functionSelect', []),
-            'verticalSelect' => $request->input('verticalSelect', []),
-            'departmentSelect' => $request->input('departmentSelect', []),
-            'userSelect' => $request->input('userSelect', []),
-            'monthSelect' => $request->input('monthSelect', []),
-            'claimTypeSelect' => $request->input('claimTypeSelect', []),
-            'claimStatusSelect' => $request->input('claimStatusSelect', []),
-            'fromDate' => $request->input('fromDate'),
-            'toDate' => $request->input('toDate'),
-            'dateType' => $request->input('dateType', 'billDate'),
-            'policySelect' => $request->input('policySelect', []),
-            'vehicleTypeSelect' => $request->input('vehicleTypeSelect', []),
-            'wheelerTypeSelect' => $request->input('wheelerTypeSelect', []),
+            'function_ids' => $request->input('functionSelect', []),
+            'vertical_ids' => $request->input('verticalSelect', []),
+            'department_ids' => $request->input('departmentSelect', []),
+            'user_ids' => $request->input('userSelect', []),
+            'months' => $request->input('monthSelect', []),
+            'claim_type_ids' => $request->input('claimTypeSelect', []),
+            'claim_statuses' => $request->input('claimStatusSelect', []),
+            'from_date' => $request->input('fromDate'),
+            'to_date' => $request->input('toDate'),
+            'date_type' => $request->input('dateType', 'billDate'),
+            'policy_ids' => $request->input('policySelect', []),
+            'vehicle_types' => $request->input('vehicleTypeSelect', []),
+            'wheeler_type' => $request->input('wheelerTypeSelect'),
         ];
 
         $columns = $request->input('columns', []);
+        $reportType = $request->input('reportType', 'general');
 
         if (empty($columns)) {
             return response()->json(['error' => 'No columns selected for export'], 400);
         }
 
-        // Log query for debugging
         DB::enableQueryLog();
         try {
-            $export = new ClaimReportExport($filters, $columns);
-            $query = $export->query();
-            $start = microtime(true);
-            $query->count(); // Test query performance
-            $duration = microtime(true) - $start;
-            Log::info('Export query executed', [
-                'duration' => $duration,
-                'query' => DB::getQueryLog(),
-                'filters' => $filters,
-                'columns' => $columns,
-            ]);
+            $export = match ($reportType) {
+                'month_wise' => new MonthWiseClaimReportExport($filters, $columns),
+                'department_wise' => new DepartmentWiseClaimReportExport($filters, $columns),
+                'claim_type_wise' => new ClaimTypeWiseClaimReportExport($filters, $columns),
+                default => new ClaimReportExport($filters, $columns),
+            };
 
             return Excel::download($export, 'expense_claims_' . date('Ymd_His') . '.xlsx');
         } catch (\Exception $e) {
@@ -304,5 +237,4 @@ class ReportController extends Controller
             return response()->json(['error' => 'Export failed: ' . $e->getMessage()], 500);
         }
     }
-
 }

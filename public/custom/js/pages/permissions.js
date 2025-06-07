@@ -180,7 +180,6 @@ $(document).ready(function () {
         event.preventDefault();
         const permissionId = $(this).data("id");
         const button = event.currentTarget;
-
         $.ajax({
             url: "permissions/" + permissionId + "/edit",
             headers: {

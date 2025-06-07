@@ -13,9 +13,27 @@
             <div class="modal-body">
                 <form id="exportForm">
                     <div class="mb-4">
+                        <h6>Select Report Type</h6>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <select class="form-select" id="reportType" name="reportType">
+                                    <option value="general" selected>General (Single Sheet)</option>
+                                    @can('Filter Month')
+                                        <option value="month_wise">Month Wise (Multiple Sheets)</option>
+                                    @endcan
+                                    @can('Filter Department')
+                                        <option value="department_wise">Department Wise (Multiple Sheets)</option>
+                                    @endcan
+                                    @can('Filter Claim Type')
+                                        <option value="claim_type_wise">Claim Type Wise (Multiple Sheets)</option>
+                                    @endcan
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
                         <h6>Select Columns to Export</h6>
                         <div class="row">
-                            <!-- Claim Section -->
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Claim Information</h6>
                                 <div class="row">
@@ -23,7 +41,7 @@
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="sn" id="colSn" checked>
-                                            <label class="form-check-label" for="colSn">Sn</label>
+                                            <label class="form-check-label" for="colSn">Exp Id</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -33,42 +51,49 @@
                                             <label class="form-check-label" for="colClaimId">Claim ID</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="claim_type" id="colClaimType" checked>
-                                            <label class="form-check-label" for="colClaimType">Claim Type</label>
+                                    @can('Filter Claim Type')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="claim_type" id="colClaimType" checked>
+                                                <label class="form-check-label" for="colClaimType">Claim Type</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="claim_status" id="colClaimStatus" checked>
-                                            <label class="form-check-label" for="colClaimStatus">Claim Status</label>
+                                    @endcan
+                                    @can('Filter Claim Status')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="claim_status" id="colClaimStatus" checked>
+                                                <label class="form-check-label" for="colClaimStatus">Claim Status</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="emp_name" id="colEmpName" checked>
-                                            <label class="form-check-label" for="colEmpName">Emp Name</label>
+                                    @endcan
+                                    @can('Filter Users')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="emp_name" id="colEmpName" checked>
+                                                <label class="form-check-label" for="colEmpName">Emp Name</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="emp_code" id="colEmpCode" checked>
-                                            <label class="form-check-label" for="colEmpCode">Emp Code</label>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="emp_code" id="colEmpCode" checked>
+                                                <label class="form-check-label" for="colEmpCode">Emp Code</label>
+                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="month" id="colMonth" checked>
-                                            <label class="form-check-label" for="colMonth">Month</label>
+                                    @endcan
+                                    @can('Filter Month')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="month" id="colMonth" checked>
+                                                <label class="form-check-label" for="colMonth">Month</label>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @endcan
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
@@ -83,42 +108,51 @@
                                             <label class="form-check-label" for="colBillDate">Bill Date</label>
                                         </div>
                                     </div>
-
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="function" id="colFunction">
-                                            <label class="form-check-label" for="colFunction">Function</label>
+                                    @can('Filter Function')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="function" id="colFunction">
+                                                <label class="form-check-label" for="colFunction">Function</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="vertical" id="colVertical">
-                                            <label class="form-check-label" for="colVertical">Vertical</label>
+                                    @endcan
+                                    @can('Filter Vertical')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="vertical" id="colVertical">
+                                                <label class="form-check-label" for="colVertical">Vertical</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="department" id="colDepartment">
-                                            <label class="form-check-label" for="colDepartment">Department</label>
+                                    @endcan
+                                    @can('Filter Department')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="department" id="colDepartment">
+                                                <label class="form-check-label" for="colDepartment">Department</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="policy" id="colPolicy">
-                                            <label class="form-check-label" for="colPolicy">Policy</label>
+                                    @endcan
+                                    @can('Filter Policy')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="policy" id="colPolicy">
+                                                <label class="form-check-label" for="colPolicy">Policy</label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="vehicle_type" id="colVehicleType">
-                                            <label class="form-check-label" for="colVehicleType">Vehicle Type</label>
+                                    @endcan
+                                    @can('Filter Vehicle Type')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="vehicle_type" id="colVehicleType">
+                                                <label class="form-check-label" for="colVehicleType">Vehicle Type</label>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @endcan
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
@@ -140,13 +174,15 @@
                                             <label class="form-check-label" for="colTotKm">Total KM</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input column-checkbox" type="checkbox"
-                                                value="WType" id="colWType">
-                                            <label class="form-check-label" for="colWType">Wheeler Type</label>
+                                    @can('Filter Wheeler Type')
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="WType" id="colWType">
+                                                <label class="form-check-label" for="colWType">Wheeler Type</label>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @endcan
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
@@ -156,8 +192,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Filled Section -->
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Filled Details</h6>
                                 <div class="row">
@@ -177,8 +211,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Verify Section -->
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Verification Details</h6>
                                 <div class="row">
@@ -206,8 +238,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Approve and Finance Section -->
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Approval and Finance Details</h6>
                                 <div class="row">

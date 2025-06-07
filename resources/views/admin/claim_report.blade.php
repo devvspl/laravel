@@ -19,80 +19,94 @@
                     <div class="card-body pb-3 pt-0">
                         <div
                             class="row bg-light-subtle border-top-dashed border border-start-0 border-end-0 border-bottom-dashed py-3 mb-3">
-                            <div class="col-md-3">
-                                <label for="functionSelect" class="form-label">Function</label>
-                                <select class="form-select" id="functionSelect" multiple>
-                                    @foreach ($functions as $function)
-                                        <option value="{{ $function->id }}">{{ $function->function_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="verticalSelect" class="form-label">Vertical</label>
-                                <select class="form-select" id="verticalSelect" multiple>
-                                    @foreach ($verticals as $vertical)
-                                        <option value="{{ $vertical->id }}">{{ $vertical->vertical_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="departmentSelect" class="form-label">Department</label>
-                                <select class="form-select" id="departmentSelect" multiple>
-                                    @foreach ($departments as $department)
-                                        <option value="{{ $department->id }}">{{ $department->department_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="userSelect" class="form-label">Users</label>
-                                <select class="form-select" id="userSelect" multiple>
-                                    @foreach ($employees as $employee)
-                                        <option value="{{ $employee->EmpCode }}"
-                                            data-status="{{ $employee->EmpStatus }}"
-                                            class="{{ $employee->EmpStatus === 'D' ? 'deactivated' : '' }}">
-                                            {{ $employee->EmpCode }} - {{ $employee->Fname }}
-                                            {{ $employee->Sname ?? '' }} {{ $employee->Lname }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="monthSelect" class="form-label">Month</label>
-                                <select class="form-select" id="monthSelect" multiple>
-                                    <option value="1">January</option>
-                                    <option value="2">February</option>
-                                    <option value="3">March</option>
-                                    <option value="4">April</option>
-                                    <option value="5">May</option>
-                                    <option value="6">June</option>
-                                    <option value="7">July</option>
-                                    <option value="8">August</option>
-                                    <option value="9">September</option>
-                                    <option value="10">October</option>
-                                    <option value="11">November</option>
-                                    <option value="12">December</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="claimTypeSelect" class="form-label">Claim Type</label>
-                                <select class="form-select" id="claimTypeSelect" multiple>
-                                    @foreach ($claimTypes as $claimType)
-                                        <option value="{{ $claimType->ClaimId }}">{{ $claimType->ClaimName }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label for="claimStatusSelect" class="form-label">Claim Status</label>
-                                <select class="form-select" id="claimStatusSelect" multiple>
-                                    <option value="1">Draft</option>
-                                    <option value="2">Submitted</option>
-                                    <option value="3">Filled</option>
-                                    <option value="4">Approved</option>
-                                    <option value="5">Financed</option>
-                                    <option value="6">Payment</option>
-                                </select>
-                            </div>
+                            @can('Filter Function')
+                                <div class="col-md-3">
+                                    <label for="functionSelect" class="form-label">Function</label>
+                                    <select class="form-select" id="functionSelect" multiple>
+                                        @foreach ($functions as $function)
+                                            <option value="{{ $function->id }}">{{ $function->function_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
+                            @can('Filter Vertical')
+                                <div class="col-md-3">
+                                    <label for="verticalSelect" class="form-label">Vertical</label>
+                                    <select class="form-select" id="verticalSelect" multiple>
+                                        @foreach ($verticals as $vertical)
+                                            <option value="{{ $vertical->id }}">{{ $vertical->vertical_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
+                            @can('Filter Department')
+                                <div class="col-md-3">
+                                    <label for="departmentSelect" class="form-label">Department</label>
+                                    <select class="form-select" id="departmentSelect" multiple>
+                                        @foreach ($departments as $department)
+                                            <option value="{{ $department->id }}">{{ $department->department_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
+                            @can('Filter Users')
+                                <div class="col-md-3">
+                                    <label for="userSelect" class="form-label">Users</label>
+                                    <select class="form-select" id="userSelect" multiple>
+                                        @foreach ($employees as $employee)
+                                            <option value="{{ $employee->EmpCode }}"
+                                                data-status="{{ $employee->EmpStatus }}"
+                                                class="{{ $employee->EmpStatus === 'D' ? 'deactivated' : '' }}">
+                                                {{ $employee->EmpCode }} - {{ $employee->Fname }}
+                                                {{ $employee->Sname ?? '' }} {{ $employee->Lname }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
+                            @can('Filter Month')
+                                <div class="col-md-3">
+                                    <label for="monthSelect" class="form-label">Month</label>
+                                    <select class="form-select" id="monthSelect" multiple>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+                            @endcan
+                            @can('Filter Claim Type')
+                                <div class="col-md-3">
+                                    <label for="claimTypeSelect" class="form-label">Claim Type</label>
+                                    <select class="form-select" id="claimTypeSelect" multiple>
+                                        @foreach ($claimTypes as $claimType)
+                                            <option value="{{ $claimType->ClaimId }}">{{ $claimType->ClaimName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endcan
+                            @can('Filter Claim Status')
+                                <div class="col-md-3">
+                                    <label for="claimStatusSelect" class="form-label">Claim Status</label>
+                                    <select class="form-select" id="claimStatusSelect" multiple>
+                                        <option value="1">Draft</option>
+                                        <option value="2">Submitted</option>
+                                        <option value="3">Filled</option>
+                                        <option value="4">Approved</option>
+                                        <option value="5">Financed</option>
+                                        <option value="6">Payment</option>
+                                    </select>
+                                </div>
+                            @endcan
                             <div class="col-md-3">
                                 <label for="fromDate" class="form-label">From</label>
                                 <input type="text" class="form-control flatpickr" id="fromDate"
@@ -122,7 +136,7 @@
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
                                 <button type="button"
-                                    class="btn btn-primary btn-label waves-effect waves-light rounded-pill w-100"
+                                    class="btn mt-3 btn-primary btn-label waves-effect waves-light rounded-pill w-100"
                                     id="searchButton">
                                     <i class="ri-check-double-line label-icon align-middle rounded-pill fs-16 me-2">
                                         <span class="loader" style="display: none;"></span>
@@ -140,29 +154,35 @@
                                 </div>
                                 <div class="collapse mt-3" id="additionalFilters">
                                     <div class="row p-3">
-                                        <div class="col-md-3">
-                                            <label for="policySelect" class="form-label">Policy</label>
-                                            <select class="form-select" id="policySelect" multiple>
-                                                @foreach ($eligibility_policy as $policy)
-                                                    <option value="{{ $policy->PolicyId }}">{{ $policy->PolicyName }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="wheelerTypeSelect" class="form-label">Wheeler Type</label>
-                                            <select class="form-select" id="wheelerTypeSelect" multiple>
-                                                <option value="2">2 Wheeler</option>
-                                                <option value="4">4 Wheeler</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label for="vehicleTypeSelect" class="form-label">Vehicle Type</label>
-                                            <select class="form-select" id="vehicleTypeSelect" multiple>
-                                                <option value="new">New</option>
-                                                <option value="old">Old</option>
-                                            </select>
-                                        </div>
+                                        @can('Filter Policy')
+                                            <div class="col-md-3">
+                                                <label for="policySelect" class="form-label">Policy</label>
+                                                <select class="form-select" id="policySelect" multiple>
+                                                    @foreach ($eligibility_policy as $policy)
+                                                        <option value="{{ $policy->PolicyId }}">{{ $policy->PolicyName }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        @endcan
+                                        @can('Filter Wheeler Type')
+                                            <div class="col-md-3">
+                                                <label for="wheelerTypeSelect" class="form-label">Wheeler Type</label>
+                                                <select class="form-select" id="wheelerTypeSelect" multiple>
+                                                    <option value="2">2 Wheeler</option>
+                                                    <option value="4">4 Wheeler</option>
+                                                </select>
+                                            </div>
+                                        @endcan
+                                        @can('Filter Vehicle Type')
+                                            <div class="col-md-3">
+                                                <label for="vehicleTypeSelect" class="form-label">Vehicle Type</label>
+                                                <select class="form-select" id="vehicleTypeSelect" multiple>
+                                                    <option value="new">New</option>
+                                                    <option value="old">Old</option>
+                                                </select>
+                                            </div>
+                                        @endcan
                                     </div>
                                 </div>
                             </div>

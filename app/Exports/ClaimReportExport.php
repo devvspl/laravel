@@ -7,27 +7,30 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use Illuminate\Support\Facades\DB;
 
-class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents
+class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithTitle
 {
     protected $filters;
     protected $columns;
     protected $totals;
+    protected $sheetName;
 
-    public function __construct(array $filters, array $columns)
+    public function __construct(array $filters, array $columns, string $sheetName = 'Claims')
     {
         $this->filters = $filters;
         $this->columns = $columns;
         $this->totals = [];
+        $this->sheetName = $sheetName;
     }
 
     public function query()
     {
         $selectedColumns = $this->getSelectedColumns();
-        // Ensure e.ExpId is always included for DISTINCT
         $columnsForSelect = array_filter($selectedColumns, fn($col) => $col !== 'e.ExpId');
         $query = DB::table('y7_expenseclaims as e')
             ->leftJoin('claimtype as ct', 'e.ClaimId', '=', 'ct.ClaimId')
@@ -85,8 +88,12 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
         }
 
         $query->orderBy('e.ExpId', 'desc');
-
         return $query;
+    }
+
+    public function title(): string
+    {
+        return $this->sheetName;
     }
 
     public function headings(): array
@@ -151,29 +158,29 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
                 'function' => $row->function_name ?? 'N/A',
                 'vertical' => $row->vertical_name ?? 'N/A',
                 'department' => $row->department_name ?? 'N/A',
-                'policy' => $row->policy_name ?? 'N/A',
-                'vehicle_type' => $row->vehicle_type ?? 'N/A',
+                'policy' => $row->policy_name ?? '',
+                'vehicle_type' => $row->vehicle_type ?? '',
                 'month' => $monthMap[$row->ClaimMonth] ?? 'N/A',
-                'upload_date' => $row->CrDate,
-                'bill_date' => $row->BillDate,
-                'claimed_amt' => $row->FilledTAmt,
-                'FilledAmt' => $row->FilledTAmt,
-                'FilledDate' => $row->FilledDate,
-                'odomtr_opening' => $row->odomtr_opening,
-                'odomtr_closing' => $row->odomtr_closing,
-                'TotKm' => $row->TotKm,
+                'upload_date' => $row->CrDate ?? '',
+                'bill_date' => $row->BillDate ?? '',
+                'claimed_amt' => $row->FilledTAmt ?? 0,
+                'FilledAmt' => $row->FilledTAmt ?? '',
+                'FilledDate' => $row->FilledDate ?? '',
+                'odomtr_opening' => $row->odomtr_opening ?? '',
+                'odomtr_closing' => $row->odomtr_closing ?? '',
+                'TotKm' => $row->TotKm ?? 0,
                 'WType' => $wheelerMap[$row->WType] ?? 'N/A',
-                'RatePerKM' => $row->RatePerKM,
-                'VerifyAmt' => $row->VerifyTAmt,
+                'RatePerKM' => $row->RatePerKM ?? 0,
+                'VerifyAmt' => $row->VerifyTAmt ?? 0,
                 'VerifyTRemark' => $row->VerifyTRemark ?? 'N/A',
-                'VerifyDate' => $row->VerifyDate,
-                'ApprAmt' => $row->ApprTAmt,
+                'VerifyDate' => $row->VerifyDate ?? '',
+                'ApprAmt' => $row->ApprTAmt ?? 0,
                 'ApprTRemark' => $row->ApprTRemark ?? 'N/A',
-                'ApprDate' => $row->ApprDate,
-                'FinancedAmt' => $row->FinancedTAmt,
+                'ApprDate' => $row->ApprDate ?? '',
+                'FinancedAmt' => $row->FinancedTAmt ?? 0,
                 'FinancedTRemark' => $row->FinancedTRemark ?? 'N/A',
-                'FinancedDate' => $row->FinancedDate,
-                default => 'N/A',
+                'FinancedDate' => $row->FinancedDate ?? '',
+                default => '',
             };
 
             if (in_array($column, ['claimed_amt', 'FilledAmt', 'TotKm', 'RatePerKM', 'VerifyAmt', 'ApprAmt', 'FinancedAmt']) && is_numeric($value)) {
@@ -182,6 +189,7 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
 
             $data[] = $value;
         }
+
         return $data;
     }
 
@@ -229,17 +237,52 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('1')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 12, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FF4B0082']],
-            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+        $lastColumn = chr(65 + count($this->columns) - 1); // Last column letter (e.g., 'A' to 'Z')
+        $lastRow = $sheet->getHighestRow(); // Get actual highest row (1 if only header, 2+ if data)
+
+        // Header row styles (always row 1)
+        $sheet->getStyle("A1:${lastColumn}1")->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => 'solid',
+                'startColor' => ['argb' => 'FF4B0082'],
+            ],
+            'alignment' => [
+                'horizontal' => 'center',
+                'vertical' => 'center',
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
         ]);
 
-        foreach (range('A', chr(65 + count($this->columns) - 1)) as $column) {
+        // Apply borders to data rows (rows 2 to lastRow) if data exists
+        if ($lastRow > 1) {
+            $sheet->getStyle("A2:${lastColumn}${lastRow}")->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color' => ['argb' => 'FF000000'],
+                    ],
+                ],
+            ]);
+        }
+
+        // Set column widths to auto-size
+        foreach (range('A', $lastColumn) as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        $sheet->getRowDimension('1')->setRowHeight(20);
+        // Set header row height
+        $sheet->getRowDimension(1)->setRowHeight(20);
+
         return [];
     }
 
@@ -249,20 +292,36 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
             AfterSheet::class => function(AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
                 $lastRow = $sheet->getHighestRow();
+                $lastColumn = chr(65 + count($this->columns) - 1);
                 $totalRow = $lastRow + 1;
 
-                $sheet->setCellValue('A' . $totalRow, 'Total');
+                // Add total row (will be row 2 if no data, or lastRow + 1 if data exists)
+                $sheet->setCellValue("A{$totalRow}", 'Total');
 
+                // Calculate and set totals for numeric columns
                 foreach ($this->columns as $index => $column) {
                     if (isset($this->totals[$index])) {
                         $sheet->setCellValue(chr(65 + $index) . $totalRow, $this->totals[$index]);
                     }
                 }
 
-                $sheet->getStyle('A' . $totalRow . ':' . chr(65 + count($this->columns) - 1) . $totalRow)->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['argb' => 'FF000000']],
-                    'fill' => ['fillType' => 'solid', 'startColor' => ['argb' => 'FFD3D3D3']],
+                // Style total row
+                $sheet->getStyle("A{$totalRow}:${lastColumn}{$totalRow}")->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['argb' => 'FF000000'],
+                    ],
+                    'fill' => [
+                        'fillType' => 'solid',
+                        'startColor' => ['argb' => 'FFD3D3D3'],
+                    ],
                     'alignment' => ['horizontal' => 'right'],
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => ['argb' => 'FF000000'],
+                        ],
+                    ],
                 ]);
             },
         ];
