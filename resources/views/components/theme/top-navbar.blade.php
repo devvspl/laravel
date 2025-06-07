@@ -3,7 +3,7 @@
         <div class="navbar-header">
             <div class="d-flex">
                 <div class="navbar-brand-box horizontal-logo">
-                    <a href="index.html" class="logo logo-dark">
+                    <a href="#" class="logo logo-dark">
                         <span class="logo-sm">
                             <img src="assets/images/logo-sm.png" alt="" height="22">
                         </span>
@@ -11,7 +11,7 @@
                             <img src="assets/images/logo-dark.png" alt="" height="17">
                         </span>
                     </a>
-                    <a href="index.html" class="logo logo-light">
+                    <a href="#" class="logo logo-light">
                         <span class="logo-sm">
                             <img src="assets/images/logo-sm.png" alt="" height="22">
                         </span>
@@ -43,9 +43,9 @@
                                 <h6 class="text-overflow text-muted mb-0 text-uppercase">Recent Searches</h6>
                             </div>
                             <div class="dropdown-item bg-transparent text-wrap">
-                                <a href="index.html" class="btn btn-soft-secondary btn-sm rounded-pill">how to setup <i
+                                <a href="#" class="btn btn-soft-secondary btn-sm rounded-pill">how to setup <i
                                         class="mdi mdi-magnify ms-1"></i></a>
-                                <a href="index.html" class="btn btn-soft-secondary btn-sm rounded-pill">buttons <i
+                                <a href="#" class="btn btn-soft-secondary btn-sm rounded-pill">buttons <i
                                         class="mdi mdi-magnify ms-1"></i></a>
                             </div>
                             <div class="dropdown-header mt-2">

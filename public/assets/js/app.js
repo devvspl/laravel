@@ -145,7 +145,7 @@
             }),
             (e = (e =
                 "/" == location.pathname
-                    ? "index.html"
+                    ? "#"
                     : location.pathname.substring(1)).substring(
                 e.lastIndexOf("/") + 1
             )) &&
@@ -186,7 +186,7 @@
             ).forEach(function (a) {
                 var n = (n =
                     "/" == location.pathname
-                        ? "index.html"
+                        ? "#"
                         : location.pathname.substring(1)).substring(
                     n.lastIndexOf("/") + 1
                 );
@@ -602,7 +602,7 @@
             t,
             a =
                 "/" == location.pathname
-                    ? "index.html"
+                    ? "#"
                     : location.pathname.substring(1);
         (a = a.substring(a.lastIndexOf("/") + 1)) &&
             ("twocolumn-panel" == document.body.className &&
@@ -668,7 +668,7 @@
     function g() {
         var e =
             "/" == location.pathname
-                ? "index.html"
+                ? "#"
                 : location.pathname.substring(1);
         (e = e.substring(e.lastIndexOf("/") + 1)) &&
             (e = document
