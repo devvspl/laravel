@@ -11,21 +11,27 @@ use App\Models\User;
 use App\Models\Roles;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * This controller handles user management in the admin area, like creating, updating, or deleting users.
+ */
 class UsersController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Shows a page with a list of all users and their roles.
+     *
+     * Gets all users and active roles from the database and loads a page to show them.
      */
     public function index()
     {
         $users = User::all();
         $roles = Roles::where('status', 1)->get();
         return view('admin.users', compact('users', 'roles'));
-
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Shows a form to create a new user.
+     *
+     * Not used right now.
      */
     public function create()
     {
@@ -33,7 +39,10 @@ class UsersController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Saves a new user to the database.
+     *
+     * Checks the input, creates a user with name, email, and a secure password,
+     * sets their status, and assigns roles if provided.
      */
     public function store(StoreUserRequest $request)
     {
@@ -46,6 +55,7 @@ class UsersController extends Controller
             'updated_by' => auth()->id(),
         ]);
 
+        // Assign roles to the user if any are provided
         if ($request->has('role_id') && !empty($request->role_id)) {
             $roleIds = is_array($request->role_id) ? $request->role_id : [$request->role_id];
             $roleIds = array_map('intval', $roleIds);
@@ -56,15 +66,20 @@ class UsersController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Shows details of a specific user.
+     *
+     * Not used right now.
      */
     public function show(string $id)
     {
-
+        //
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Gets a user to edit their details.
+     *
+     * Finds a user by their ID, gets their current roles, and sends the data back
+     * for an edit form.
      */
     public function edit(string $id)
     {
@@ -76,7 +91,10 @@ class UsersController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Updates a user in the database.
+     *
+     * Finds a user by ID, updates their name and status, and syncs their roles
+     * (adds or removes roles based on the input).
      */
     public function update(UpdateUserRequest $request, string $id)
     {
@@ -87,6 +105,8 @@ class UsersController extends Controller
             'updated_by' => auth()->id(),
             'updated_at' => now(),
         ]);
+
+        // Update user roles: assign new ones or remove all if none provided
         if ($request->has('role_id') && !empty($request->role_id)) {
             $roleIds = is_array($request->role_id) ? $request->role_id : [$request->role_id];
             $roleIds = array_map('intval', $roleIds);
@@ -99,7 +119,9 @@ class UsersController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Deletes a user from the database.
+     *
+     * Finds a user by their ID and removes them.
      */
     public function destroy(string $id)
     {
@@ -108,6 +130,11 @@ class UsersController extends Controller
         return $this->jsonSuccess(null, 'User deleted successfully.');
     }
 
+    /**
+     * Shows the profile page for the logged-in user.
+     *
+     * Gets the details of the current user and loads their profile page.
+     */
     public function profile()
     {
         $id = Auth::id();

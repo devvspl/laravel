@@ -107,17 +107,21 @@
                 </form>
             </div>
             <div class="d-flex align-items-center">
+                <button type="button"
+                    class="btn btn-icon btn-topbar material-shadow-none btn-ghost-secondary rounded-circle"
+                    data-bs-toggle="tooltip" data-bs-placement="bottom" title="Fullscreen">
+                    <i class='bx bx-fullscreen fs-22'></i>
+                </button>
+                <button type="button"
+                    class="btn btn-icon btn-topbar material-shadow-none btn-ghost-secondary rounded-circle light-dark-mode"
+                    data-bs-toggle="tooltip" data-bs-placement="bottom" title="Toggle Dark Mode">
+                    <i class='bx bx-moon fs-22'></i>
+                </button>
                 <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button"
+                    <button type="button" id="clearCacheBtn"
                         class="btn btn-icon btn-topbar material-shadow-none btn-ghost-secondary rounded-circle"
-                        data-toggle="fullscreen">
-                        <i class='bx bx-fullscreen fs-22'></i>
-                    </button>
-                </div>
-                <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button"
-                        class="btn btn-icon btn-topbar material-shadow-none btn-ghost-secondary rounded-circle light-dark-mode">
-                        <i class='bx bx-moon fs-22'></i>
+                        title="Clear Cache" data-bs-toggle="tooltip" data-bs-placement="bottom">
+                        <i class='bx bx-revision fs-22'></i>
                     </button>
                 </div>
                 <div class="dropdown topbar-head-dropdown ms-1 header-item" id="notificationDropdown">

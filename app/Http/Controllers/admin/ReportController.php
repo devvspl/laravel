@@ -15,12 +15,22 @@ use App\Exports\ClaimReportExport;
 use App\Exports\ClaimTypeWiseClaimReportExport;
 use App\Exports\DepartmentWiseClaimReportExport;
 use App\Exports\MonthWiseClaimReportExport;
+use App\Exports\DailyActivityReportExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * This controller handles reports in the admin area, like expense claims and daily activity reports.
+ */
 class ReportController extends Controller
 {
+    /**
+     * Shows the claim report page.
+     *
+     * Loads a page with data like active functions, verticals, departments, employees,
+     * claim types, and policies for filtering expense claims.
+     */
     public function claimReport()
     {
         try {
@@ -45,6 +55,26 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * Shows the daily activity report page.
+     *
+     * Loads a page for viewing daily activity data, like uploads or approvals.
+     */
+    public function dailyActivity()
+    {
+        try {
+            return view('admin.daily_activity');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error loading claim report: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Gets a list of employees by department.
+     *
+     * Fetches employees for a specific company and department(s), returning their details
+     * like ID, code, and name as a JSON response.
+     */
     public function getEmployeesByDepartment(Request $request)
     {
         try {
@@ -73,6 +103,12 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * Filters expense claims based on user input.
+     *
+     * Takes filters like department, date range, or claim type, grabs matching claims
+     * from the database, and returns them as a paginated JSON response for a table.
+     */
     public function filterClaims(Request $request)
     {
         try {
@@ -96,25 +132,29 @@ class ReportController extends Controller
                 'wheeler_type' => $request->input('wheeler_type')
             ];
 
-            $query = ExpenseClaim::select([
-                DB::raw('DISTINCT y7_expenseclaims.ExpId as ExpId'),
-                'y7_expenseclaims.ClaimId as ClaimID',
-                'claimtype.ClaimName as ClaimType',
-                DB::raw("CONCAT(hrims.hrm_employee.Fname, ' ', COALESCE(hrims.hrm_employee.Sname, ''), ' ', hrims.hrm_employee.Lname) as EmpName"),
-                'hrims.hrm_employee.EmpCode',
-                'hrims.core_functions.function_name as FunctionName',
-                'hrims.core_verticals.vertical_name as VerticalName',
-                'hrims.core_departments.department_name as DepartmentName',
-                'hrims.hrm_master_eligibility_policy.PolicyName as PolicyName',
-                'hrims.hrm_employee_eligibility.VehicleType as VehicleType',
-                'y7_expenseclaims.ClaimMonth',
-                'y7_expenseclaims.CrDate as UploadDate',
-                'y7_expenseclaims.BillDate',
-                'y7_expenseclaims.FilledTAmt as ClaimedAmount',
-                'y7_expenseclaims.ClaimAtStep as ClaimStatus'
-            ])
-                ->leftJoin('claimtype', 'y7_expenseclaims.ClaimId', '=', 'claimtype.ClaimId')
-                ->join('hrims.hrm_employee', 'y7_expenseclaims.FilledBy', '=', 'hrims.hrm_employee.EmployeeID')
+            $table = ExpenseClaim::tableName(); 
+
+            
+            $query = \DB::table($table)
+                ->select([
+                    \DB::raw("DISTINCT {$table}.ExpId as ExpId"),
+                    "{$table}.ClaimId as ClaimID",
+                    'claimtype.ClaimName as ClaimType',
+                    \DB::raw("CONCAT(hrims.hrm_employee.Fname, ' ', COALESCE(hrims.hrm_employee.Sname, ''), ' ', hrims.hrm_employee.Lname) as EmpName"),
+                    'hrims.hrm_employee.EmpCode',
+                    'hrims.core_functions.function_name as FunctionName',
+                    'hrims.core_verticals.vertical_name as VerticalName',
+                    'hrims.core_departments.department_name as DepartmentName',
+                    'hrims.hrm_master_eligibility_policy.PolicyName as PolicyName',
+                    'hrims.hrm_employee_eligibility.VehicleType as VehicleType',
+                    "{$table}.ClaimMonth",
+                    "{$table}.CrDate as UploadDate",
+                    "{$table}.BillDate",
+                    "{$table}.FilledTAmt as ClaimedAmount",
+                    "{$table}.ClaimAtStep as ClaimStatus"
+                ])
+                ->leftJoin('claimtype', "{$table}.ClaimId", '=', 'claimtype.ClaimId')
+                ->join('hrims.hrm_employee', "{$table}.FilledBy", '=', 'hrims.hrm_employee.EmployeeID')
                 ->join('hrims.hrm_employee_general', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_general.EmployeeID')
                 ->join('hrims.hrm_employee_eligibility', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_eligibility.EmployeeID')
                 ->join('hrims.core_departments', 'hrims.hrm_employee_general.DepartmentId', '=', 'hrims.core_departments.id')
@@ -122,6 +162,7 @@ class ReportController extends Controller
                 ->leftJoin('hrims.core_verticals', 'hrims.hrm_employee_general.EmpVertical', '=', 'hrims.core_verticals.id')
                 ->leftJoin('hrims.hrm_master_eligibility_policy', 'hrims.hrm_employee_eligibility.VehiclePolicy', '=', 'hrims.hrm_master_eligibility_policy.PolicyId');
 
+            
             if (!empty($filters['function_ids'])) {
                 $query->whereIn('hrims.hrm_employee_general.EmpFunction', $filters['function_ids']);
             }
@@ -135,16 +176,16 @@ class ReportController extends Controller
                 $query->whereIn('hrims.hrm_employee.EmpCode', $filters['user_ids']);
             }
             if (!empty($filters['months'])) {
-                $query->whereIn('y7_expenseclaims.ClaimMonth', $filters['months']);
+                $query->whereIn("{$table}.ClaimMonth", $filters['months']);
             }
             if (!empty($filters['claim_type_ids'])) {
                 if (in_array(7, $filters['claim_type_ids'])) {
-                    $query->where('y7_expenseclaims.ClaimId', 7);
+                    $query->where("{$table}.ClaimId", 7);
                     if (!empty($filters['wheeler_type'])) {
-                        $query->where('y7_expenseclaims.WType', $filters['wheeler_type']);
+                        $query->where("{$table}.WType", $filters['wheeler_type']);
                     }
                 } else {
-                    $query->whereIn('y7_expenseclaims.ClaimId', $filters['claim_type_ids']);
+                    $query->whereIn("{$table}.ClaimId", $filters['claim_type_ids']);
                 }
             }
             if (!empty($filters['policy_ids'])) {
@@ -154,7 +195,7 @@ class ReportController extends Controller
                 $query->whereIn('hrims.hrm_employee_eligibility.VehicleType', $filters['vehicle_types']);
             }
             if (!empty($filters['claim_statuses'])) {
-                $query->whereIn('y7_expenseclaims.ClaimAtStep', $filters['claim_statuses']);
+                $query->whereIn("{$table}.ClaimAtStep", $filters['claim_statuses']);
             }
             if ($filters['from_date'] && $filters['to_date']) {
                 $dateColumn = match ($filters['date_type']) {
@@ -163,10 +204,10 @@ class ReportController extends Controller
                     'filledDate' => 'FilledDate',
                     default => 'BillDate',
                 };
-                $query->whereBetween('y7_expenseclaims.' . $dateColumn, [$filters['from_date'], $filters['to_date']]);
+                $query->whereBetween("{$table}.{$dateColumn}", [$filters['from_date'], $filters['to_date']]);
             }
 
-            $totalRecords = $query->count(DB::raw('DISTINCT y7_expenseclaims.ExpId'));
+            $totalRecords = $query->count(\DB::raw("DISTINCT {$table}.ExpId"));
 
             $claims = $query->skip($start)->take($perPage)->get();
 
@@ -181,14 +222,18 @@ class ReportController extends Controller
                 "data" => $claims,
             ]);
         } catch (\Exception $e) {
-            Log::error('Claim Filter Error: ' . $e->getMessage());
+            \Log::error('Claim Filter Error: ' . $e->getMessage());
             return response()->json(['error' => 'Error filtering claims: ' . $e->getMessage()], 500);
         }
     }
 
 
-
-
+    /**
+     * Exports filtered expense claims to an Excel file.
+     *
+     * Takes filters and columns from the request, creates an Excel file based on the report type
+     * (like month-wise or department-wise), and downloads it with a timestamped name.
+     */
     public function export(Request $request)
     {
         ini_set('max_execution_time', 300);
@@ -212,29 +257,137 @@ class ReportController extends Controller
 
         $columns = $request->input('columns', []);
         $reportType = $request->input('reportType', 'general');
-
+        $protectSheets = $request->input('protectSheets', false);
+        $table = ExpenseClaim::tableName();
         if (empty($columns)) {
             return response()->json(['error' => 'No columns selected for export'], 400);
         }
-
-        DB::enableQueryLog();
         try {
             $export = match ($reportType) {
-                'month_wise' => new MonthWiseClaimReportExport($filters, $columns),
-                'department_wise' => new DepartmentWiseClaimReportExport($filters, $columns),
-                'claim_type_wise' => new ClaimTypeWiseClaimReportExport($filters, $columns),
-                default => new ClaimReportExport($filters, $columns),
+                'month_wise' => new MonthWiseClaimReportExport($filters, $columns, $protectSheets, $table),
+                'department_wise' => new DepartmentWiseClaimReportExport($filters, $columns, $protectSheets, $table),
+                'claim_type_wise' => new ClaimTypeWiseClaimReportExport($filters, $columns, $protectSheets, $table),
+                default => new ClaimReportExport($filters, $columns, 'Claims', $protectSheets, $table),
             };
 
             return Excel::download($export, 'expense_claims_' . date('Ymd_His') . '.xlsx');
         } catch (\Exception $e) {
-            Log::error('Export failed', [
-                'error' => $e->getMessage(),
-                'query' => DB::getQueryLog(),
-                'filters' => $filters,
-                'columns' => $columns,
-            ]);
             return response()->json(['error' => 'Export failed: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Gets data for the daily activity report.
+     *
+     * Fetches counts of actions (like uploads, approvals) between two dates and
+     * returns them as a JSON response for displaying in a report.
+     */
+    public function getDailyActivityData(Request $request)
+    {
+        $fromDate = $request->input('fromDate');
+        $toDate = $request->input('toDate');
+
+        $query = "
+            SELECT ActionDate,
+                SUM(TotalUpload) AS TotalUpload,
+                SUM(Punching) AS Punching,
+                SUM(Verified) AS Verified,
+                SUM(Approved) AS Approved,
+                SUM(Financed) AS Financed
+            FROM (
+                SELECT DATE(CrDate) AS ActionDate, COUNT(*) AS TotalUpload, 0 AS Punching, 0 AS Verified, 0 AS Approved, 0 AS Financed
+                FROM y7_expenseclaims
+                WHERE CrDate != '0000-00-00'
+                  AND ClaimStatus != 'Deactivate'
+                  AND ClaimId NOT IN (19, 20, 21)
+                  AND DATE(CrDate) BETWEEN ? AND ?
+                GROUP BY DATE(CrDate)
+
+                UNION ALL
+
+                SELECT DATE(FilledDate), 0, COUNT(*), 0, 0, 0
+                FROM y7_expenseclaims
+                WHERE FilledDate != '0000-00-00'
+                  AND ClaimStatus != 'Deactivate'
+                  AND ClaimId NOT IN (19, 20, 21)
+                  AND DATE(FilledDate) BETWEEN ? AND ?
+                GROUP BY DATE(FilledDate)
+
+                UNION ALL
+
+                SELECT DATE(VerifyDate), 0, 0, COUNT(*), 0, 0
+                FROM y7_expenseclaims
+                WHERE VerifyDate != '0000-00-00'
+                  AND ClaimStatus != 'Deactivate'
+                  AND ClaimId NOT IN (19, 20, 21)
+                  AND DATE(VerifyDate) BETWEEN ? AND ?
+                GROUP BY DATE(VerifyDate)
+
+                UNION ALL
+
+                SELECT DATE(ApprDate), 0, 0, 0, COUNT(*), 0
+                FROM y7_expenseclaims
+                WHERE ApprDate != '0000-00-00'
+                  AND ClaimStatus != 'Deactivate'
+                  AND ClaimId NOT IN (19, 20, 21)
+                  AND DATE(ApprDate) BETWEEN ? AND ?
+                GROUP BY DATE(ApprDate)
+
+                UNION ALL
+
+                SELECT DATE(FinancedDate), 0, 0, 0, 0, COUNT(*)
+                FROM y7_expenseclaims
+                WHERE FinancedDate != '0000-00-00'
+                  AND ClaimStatus != 'Deactivate'
+                  AND ClaimId NOT IN (19, 20, 21)
+                  AND DATE(FinancedDate) BETWEEN ? AND ?
+                GROUP BY DATE(FinancedDate)
+            ) AS progress
+            GROUP BY ActionDate
+            ORDER BY ActionDate
+        ";
+
+        $data = DB::select($query, [
+            $fromDate,
+            $toDate,
+            $fromDate,
+            $toDate,
+            $fromDate,
+            $toDate,
+            $fromDate,
+            $toDate,
+            $fromDate,
+            $toDate,
+        ]);
+
+        return response()->json([
+            'data' => array_map(function ($row) {
+                return [
+                    'ActionDate' => $row->ActionDate,
+                    'TotalUpload' => $row->TotalUpload,
+                    'Punching' => $row->Punching,
+                    'Verified' => $row->Verified,
+                    'Approved' => $row->Approved,
+                    'Financed' => $row->Financed,
+                ];
+            }, $data),
+        ]);
+    }
+
+    /**
+     * Exports daily activity data to an Excel file.
+     *
+     * Creates an Excel file with daily activity data (like uploads or approvals)
+     * between two dates and downloads it with a descriptive name.
+     */
+    public function exportDailyActivity(Request $request)
+    {
+        $fromDate = $request->input('fromDate');
+        $toDate = $request->input('toDate');
+
+        return Excel::download(
+            new DailyActivityReportExport($fromDate, $toDate),
+            'daily_activity_report_' . $fromDate . '_to_' . $toDate . '.xlsx'
+        );
     }
 }

@@ -187,11 +187,31 @@ function endSimpleLoader(event) {
 $(document).ready(function () {
     $("#company").select2({
         placeholder: "-- Select Company --",
-        allowClear: true, 
+        allowClear: true,
     });
-
     $("#financial_year").select2({
         placeholder: "-- Select Financial Year --",
-        allowClear: true, 
+        allowClear: true,
+    });
+    $("#clearCacheBtn").on("click", function () {
+        $.ajax({
+            url: "clear-all-cache",
+            type: "GET",
+            success: function (response) {
+                showAlert(
+                    "success",
+                    "ri-checkbox-circle-line",
+                    response.message || "Cache cleared successfully!"
+                );
+            },
+            error: function (xhr) {
+                showAlert(
+                    "danger",
+                    "ri-error-warning-line",
+                    xhr.responseJSON?.message ||
+                        "An error occurred while clearing the cache."
+                );
+            },
+        });
     });
 });

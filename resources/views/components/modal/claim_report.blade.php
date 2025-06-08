@@ -1,5 +1,5 @@
 <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="progress-container" style="display: none;">
                 <div class="progres" style="height: 5px;">
@@ -15,7 +15,7 @@
                     <div class="mb-4">
                         <h6>Select Report Type</h6>
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-4">
                                 <select class="form-select" id="reportType" name="reportType">
                                     <option value="general" selected>General (Single Sheet)</option>
                                     @can('Filter Month')
@@ -29,6 +29,13 @@
                                     @endcan
                                 </select>
                             </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="protectSheets"
+                                        name="protectSheets">
+                                    <label class="form-check-label" for="protectSheets">Protect Sheets</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="mb-4">
@@ -37,14 +44,14 @@
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Claim Information</h6>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="sn" id="colSn" checked>
                                             <label class="form-check-label" for="colSn">Exp Id</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="claim_id" id="colClaimId" checked>
@@ -52,7 +59,7 @@
                                         </div>
                                     </div>
                                     @can('Filter Claim Type')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="claim_type" id="colClaimType" checked>
@@ -61,7 +68,7 @@
                                         </div>
                                     @endcan
                                     @can('Filter Claim Status')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="claim_status" id="colClaimStatus" checked>
@@ -70,14 +77,14 @@
                                         </div>
                                     @endcan
                                     @can('Filter Users')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="emp_name" id="colEmpName" checked>
                                                 <label class="form-check-label" for="colEmpName">Emp Name</label>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="emp_code" id="colEmpCode" checked>
@@ -86,7 +93,7 @@
                                         </div>
                                     @endcan
                                     @can('Filter Month')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="month" id="colMonth" checked>
@@ -94,14 +101,14 @@
                                             </div>
                                         </div>
                                     @endcan
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="upload_date" id="colUploadDate" checked>
                                             <label class="form-check-label" for="colUploadDate">Upload Date</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="bill_date" id="colBillDate" checked>
@@ -109,7 +116,7 @@
                                         </div>
                                     </div>
                                     @can('Filter Function')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="function" id="colFunction">
@@ -118,7 +125,7 @@
                                         </div>
                                     @endcan
                                     @can('Filter Vertical')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="vertical" id="colVertical">
@@ -127,7 +134,7 @@
                                         </div>
                                     @endcan
                                     @can('Filter Department')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="department" id="colDepartment">
@@ -136,7 +143,7 @@
                                         </div>
                                     @endcan
                                     @can('Filter Policy')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="policy" id="colPolicy">
@@ -145,7 +152,7 @@
                                         </div>
                                     @endcan
                                     @can('Filter Vehicle Type')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="vehicle_type" id="colVehicleType">
@@ -153,21 +160,21 @@
                                             </div>
                                         </div>
                                     @endcan
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="odomtr_opening" id="colOdoOpening">
                                             <label class="form-check-label" for="colOdoOpening">Odomtr Opening</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="odomtr_closing" id="colOdoClosing">
                                             <label class="form-check-label" for="colOdoClosing">Odomtr Closing</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="TotKm" id="colTotKm">
@@ -175,7 +182,7 @@
                                         </div>
                                     </div>
                                     @can('Filter Wheeler Type')
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="form-check">
                                                 <input class="form-check-input column-checkbox" type="checkbox"
                                                     value="WType" id="colWType">
@@ -183,7 +190,7 @@
                                             </div>
                                         </div>
                                     @endcan
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="RatePerKM" id="colRatePerKM">
@@ -195,14 +202,14 @@
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Filled Details</h6>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="claimed_amt" id="colClaimedAmt" checked>
                                             <label class="form-check-label" for="colClaimedAmt">Claimed Amt</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="FilledDate" id="colFilledDate">
@@ -214,14 +221,14 @@
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Verification Details</h6>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="VerifyAmt" id="colVerifyAmt" checked>
                                             <label class="form-check-label" for="colVerifyAmt">Verified Amt</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="VerifyTRemark" id="colVerifyTRemark">
@@ -229,7 +236,7 @@
                                                 Remark</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="VerifyDate" id="colVerifyDate">
@@ -241,14 +248,14 @@
                             <div class="col-12 mb-3">
                                 <h6 class="text-primary">Approval and Finance Details</h6>
                                 <div class="row">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="ApprAmt" id="colApprAmt" checked>
                                             <label class="form-check-label" for="colApprAmt">Approved Amt</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="ApprTRemark" id="colApprTRemark">
@@ -256,21 +263,21 @@
                                                 Remark</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="ApprDate" id="colApprDate">
                                             <label class="form-check-label" for="colApprDate">Approval Date</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="FinancedAmt" id="colFinancedAmt" checked>
                                             <label class="form-check-label" for="colFinancedAmt">Financed Amt</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="FinancedTRemark" id="colFinancedTRemark">
@@ -278,7 +285,7 @@
                                                 Remark</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input column-checkbox" type="checkbox"
                                                 value="FinancedDate" id="colFinancedDate">

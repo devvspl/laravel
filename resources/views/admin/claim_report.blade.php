@@ -21,7 +21,7 @@
                             class="row bg-light-subtle border-top-dashed border border-start-0 border-end-0 border-bottom-dashed py-3 mb-3">
                             @can('Filter Function')
                                 <div class="col-md-3">
-                                    <label for="functionSelect" class="form-label">Function</label>
+                                    <label for="functionSelect" class="form-label mt-1">Function</label>
                                     <select class="form-select" id="functionSelect" multiple>
                                         @foreach ($functions as $function)
                                             <option value="{{ $function->id }}">{{ $function->function_name }}</option>
@@ -31,7 +31,7 @@
                             @endcan
                             @can('Filter Vertical')
                                 <div class="col-md-3">
-                                    <label for="verticalSelect" class="form-label">Vertical</label>
+                                    <label for="verticalSelect" class="form-label mt-1">Vertical</label>
                                     <select class="form-select" id="verticalSelect" multiple>
                                         @foreach ($verticals as $vertical)
                                             <option value="{{ $vertical->id }}">{{ $vertical->vertical_name }}</option>
@@ -41,7 +41,7 @@
                             @endcan
                             @can('Filter Department')
                                 <div class="col-md-3">
-                                    <label for="departmentSelect" class="form-label">Department</label>
+                                    <label for="departmentSelect" class="form-label mt-1">Department</label>
                                     <select class="form-select" id="departmentSelect" multiple>
                                         @foreach ($departments as $department)
                                             <option value="{{ $department->id }}">{{ $department->department_name }}
@@ -50,9 +50,17 @@
                                     </select>
                                 </div>
                             @endcan
+                             @can('Filter Sub Department')
+                                <div class="col-md-3">
+                                    <label for="subDepartmentSelect" class="form-label mt-1">Sub Department</label>
+                                    <select class="form-select" id="subDepartmentSelect" multiple>
+                                       
+                                    </select>
+                                </div>
+                            @endcan
                             @can('Filter Users')
                                 <div class="col-md-3">
-                                    <label for="userSelect" class="form-label">Users</label>
+                                    <label for="userSelect" class="form-label mt-1">Users</label>
                                     <select class="form-select" id="userSelect" multiple>
                                         @foreach ($employees as $employee)
                                             <option value="{{ $employee->EmpCode }}"
@@ -67,7 +75,7 @@
                             @endcan
                             @can('Filter Month')
                                 <div class="col-md-3">
-                                    <label for="monthSelect" class="form-label">Month</label>
+                                    <label for="monthSelect" class="form-label mt-1">Month</label>
                                     <select class="form-select" id="monthSelect" multiple>
                                         <option value="1">January</option>
                                         <option value="2">February</option>
@@ -86,7 +94,7 @@
                             @endcan
                             @can('Filter Claim Type')
                                 <div class="col-md-3">
-                                    <label for="claimTypeSelect" class="form-label">Claim Type</label>
+                                    <label for="claimTypeSelect" class="form-label mt-1">Claim Type</label>
                                     <select class="form-select" id="claimTypeSelect" multiple>
                                         @foreach ($claimTypes as $claimType)
                                             <option value="{{ $claimType->ClaimId }}">{{ $claimType->ClaimName }}</option>
@@ -96,7 +104,7 @@
                             @endcan
                             @can('Filter Claim Status')
                                 <div class="col-md-3">
-                                    <label for="claimStatusSelect" class="form-label">Claim Status</label>
+                                    <label for="claimStatusSelect" class="form-label mt-1">Claim Status</label>
                                     <select class="form-select" id="claimStatusSelect" multiple>
                                         <option value="1">Draft</option>
                                         <option value="2">Submitted</option>
@@ -108,16 +116,16 @@
                                 </div>
                             @endcan
                             <div class="col-md-3">
-                                <label for="fromDate" class="form-label">From</label>
+                                <label for="fromDate" class="form-label mt-1">From</label>
                                 <input type="text" class="form-control flatpickr" id="fromDate"
                                     value="{{ date('Y-m-d') }}">
                             </div>
                             <div class="col-md-3">
-                                <label for="toDate" class="form-label">To</label>
+                                <label for="toDate" class="form-label mt-1">To</label>
                                 <input type="text" class="form-control flatpickr" id="toDate"
                                     value="{{ date('Y-m-d') }}">
                             </div>
-                            <div class="col-md-6 d-flex align-items-end">
+                            <div class="col-md-4 d-flex align-items-end">
                                 <div class="form-check me-3">
                                     <input class="form-check-input" type="radio" name="dateType" id="billDate"
                                         value="billDate" checked>
@@ -134,7 +142,7 @@
                                     <label class="form-check-label" for="filledDate">Filled Date</label>
                                 </div>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
+                            <div class="col-md-2 d-flex align-items-end">
                                 <button type="button"
                                     class="btn mt-3 btn-primary btn-label waves-effect waves-light rounded-pill w-100"
                                     id="searchButton">
@@ -156,7 +164,7 @@
                                     <div class="row p-3">
                                         @can('Filter Policy')
                                             <div class="col-md-3">
-                                                <label for="policySelect" class="form-label">Policy</label>
+                                                <label for="policySelect" class="form-label mt-1">Policy</label>
                                                 <select class="form-select" id="policySelect" multiple>
                                                     @foreach ($eligibility_policy as $policy)
                                                         <option value="{{ $policy->PolicyId }}">{{ $policy->PolicyName }}
@@ -167,7 +175,7 @@
                                         @endcan
                                         @can('Filter Wheeler Type')
                                             <div class="col-md-3">
-                                                <label for="wheelerTypeSelect" class="form-label">Wheeler Type</label>
+                                                <label for="wheelerTypeSelect" class="form-label mt-1">Wheeler Type</label>
                                                 <select class="form-select" id="wheelerTypeSelect" multiple>
                                                     <option value="2">2 Wheeler</option>
                                                     <option value="4">4 Wheeler</option>
@@ -176,7 +184,7 @@
                                         @endcan
                                         @can('Filter Vehicle Type')
                                             <div class="col-md-3">
-                                                <label for="vehicleTypeSelect" class="form-label">Vehicle Type</label>
+                                                <label for="vehicleTypeSelect" class="form-label mt-1">Vehicle Type</label>
                                                 <select class="form-select" id="vehicleTypeSelect" multiple>
                                                     <option value="new">New</option>
                                                     <option value="old">Old</option>

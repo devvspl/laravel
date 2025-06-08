@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Illuminate\Support\Facades\DB;
 
 class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithTitle
@@ -19,20 +20,24 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
     protected $columns;
     protected $totals;
     protected $sheetName;
+    protected $protectSheets;
+    protected $table;
 
-    public function __construct(array $filters, array $columns, string $sheetName = 'Claims')
+    public function __construct(array $filters, array $columns, string $sheetName = 'Claims', bool $protectSheets = false, $table)
     {
         $this->filters = $filters;
         $this->columns = $columns;
         $this->totals = [];
         $this->sheetName = $sheetName;
+        $this->protectSheets = $protectSheets;
+        $this->table = $table;
     }
 
     public function query()
     {
         $selectedColumns = $this->getSelectedColumns();
         $columnsForSelect = array_filter($selectedColumns, fn($col) => $col !== 'e.ExpId');
-        $query = DB::table('y7_expenseclaims as e')
+        $query = DB::table("{$this->table} as e")
             ->leftJoin('claimtype as ct', 'e.ClaimId', '=', 'ct.ClaimId')
             ->join('hrims.hrm_employee as emp', 'e.FilledBy', '=', 'emp.EmployeeID')
             ->join('hrims.hrm_employee_general as eg', 'emp.EmployeeID', '=', 'eg.EmployeeID')
@@ -138,12 +143,27 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
     public function map($row): array
     {
         $monthMap = [
-            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
-            7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+            1 => 'January',
+            2 => 'February',
+            3 => 'March',
+            4 => 'April',
+            5 => 'May',
+            6 => 'June',
+            7 => 'July',
+            8 => 'August',
+            9 => 'September',
+            10 => 'October',
+            11 => 'November',
+            12 => 'December'
         ];
         $wheelerMap = [2 => '2 Wheeler', 4 => '4 Wheeler'];
         $statusMap = [
-            1 => 'Draft', 2 => 'Submitted', 3 => 'Filled', 4 => 'Approved', 5 => 'Financed', 6 => 'Payment',
+            1 => 'Draft',
+            2 => 'Submitted',
+            3 => 'Filled',
+            4 => 'Approved',
+            5 => 'Financed',
+            6 => 'Payment',
         ];
 
         $data = [];
@@ -237,19 +257,77 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
 
     public function styles(Worksheet $sheet)
     {
-        $lastColumn = chr(65 + count($this->columns) - 1); // Last column letter (e.g., 'A' to 'Z')
-        $lastRow = $sheet->getHighestRow(); // Get actual highest row (1 if only header, 2+ if data)
+        $lastColumn = chr(65 + count($this->columns) - 1);
+        $lastRow = $sheet->getHighestRow();
 
-        // Header row styles (always row 1)
-        $sheet->getStyle("A1:${lastColumn}1")->applyFromArray([
+
+        $sectionColumns = [
+            'Claim Information' => ['sn', 'claim_id', 'claim_type', 'claim_status', 'emp_name', 'emp_code', 'function', 'vertical', 'department', 'policy', 'vehicle_type', 'month', 'upload_date', 'bill_date', 'claimed_amt'],
+            'Filled Details' => ['FilledAmt', 'FilledDate', 'odomtr_opening', 'odomtr_closing', 'TotKm', 'WType', 'RatePerKM'],
+            'Verification Details' => ['VerifyAmt', 'VerifyTRemark', 'VerifyDate'],
+            'Approval Details' => ['ApprAmt', 'ApprTRemark', 'ApprDate'],
+            'Finance Details' => ['FinancedAmt', 'FinancedTRemark', 'FinancedDate'],
+        ];
+
+
+        $sheet->insertNewRowBefore(1, 1);
+
+
+        $currentColumn = 'A';
+        foreach ($sectionColumns as $section => $columns) {
+            $sectionColumnCount = 0;
+            foreach ($this->columns as $column) {
+                if (in_array($column, $columns)) {
+                    $sectionColumnCount++;
+                }
+            }
+
+            if ($sectionColumnCount > 0) {
+                $startColumn = $currentColumn;
+                $endColumn = chr(ord($currentColumn) + $sectionColumnCount - 1);
+                if ($startColumn !== $endColumn) {
+                    $sheet->mergeCells("{$startColumn}1:{$endColumn}1");
+                }
+                $sheet->setCellValue("{$startColumn}1", $section);
+
+
+                $currentColumn = chr(ord($currentColumn) + $sectionColumnCount);
+            }
+        }
+
+
+        $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 14,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF001868'],
+            ],
+            'alignment' => [
+                'horizontal' => 'center',
+                'vertical' => 'center',
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_MEDIUM,
+                    'color' => ['argb' => 'FF000000'],
+                ],
+            ],
+        ]);
+
+
+        $sheet->getStyle("A2:{$lastColumn}2")->applyFromArray([
             'font' => [
                 'bold' => true,
                 'size' => 12,
                 'color' => ['argb' => 'FFFFFFFF'],
             ],
             'fill' => [
-                'fillType' => 'solid',
-                'startColor' => ['argb' => 'FF4B0082'],
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF299CDB'],
             ],
             'alignment' => [
                 'horizontal' => 'center',
@@ -263,9 +341,9 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
             ],
         ]);
 
-        // Apply borders to data rows (rows 2 to lastRow) if data exists
-        if ($lastRow > 1) {
-            $sheet->getStyle("A2:${lastColumn}${lastRow}")->applyFromArray([
+
+        if ($lastRow > 2) {
+            $sheet->getStyle("A3:{$lastColumn}{$lastRow}")->applyFromArray([
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
@@ -275,13 +353,14 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
             ]);
         }
 
-        // Set column widths to auto-size
+
         foreach (range('A', $lastColumn) as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        // Set header row height
-        $sheet->getRowDimension(1)->setRowHeight(20);
+
+        $sheet->getRowDimension(1)->setRowHeight(30);
+        $sheet->getRowDimension(2)->setRowHeight(25);
 
         return [];
     }
@@ -289,24 +368,24 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
                 $lastRow = $sheet->getHighestRow();
                 $lastColumn = chr(65 + count($this->columns) - 1);
                 $totalRow = $lastRow + 1;
 
-                // Add total row (will be row 2 if no data, or lastRow + 1 if data exists)
+
                 $sheet->setCellValue("A{$totalRow}", 'Total');
 
-                // Calculate and set totals for numeric columns
+
                 foreach ($this->columns as $index => $column) {
                     if (isset($this->totals[$index])) {
                         $sheet->setCellValue(chr(65 + $index) . $totalRow, $this->totals[$index]);
                     }
                 }
 
-                // Style total row
-                $sheet->getStyle("A{$totalRow}:${lastColumn}{$totalRow}")->applyFromArray([
+
+                $sheet->getStyle("A{$totalRow}:{$lastColumn}{$totalRow}")->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'color' => ['argb' => 'FF000000'],
@@ -323,6 +402,15 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
                         ],
                     ],
                 ]);
+
+
+                if ($this->protectSheets) {
+                    $sheet->getProtection()->setSheet(true);
+                    $sheet->getProtection()->setPassword('xai2025');
+                    $sheet->getProtection()->setSort(false);
+                    $sheet->getProtection()->setInsertRows(false);
+                    $sheet->getProtection()->setFormatCells(false);
+                }
             },
         ];
     }

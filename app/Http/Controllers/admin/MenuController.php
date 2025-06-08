@@ -7,11 +7,17 @@ use Illuminate\Http\Request;
 use App\Models\Menu;
 use App\Http\Requests\StoreMenuRequest;
 use App\Http\Requests\UpdateMenuRequest;
- use Illuminate\Support\Str;
+use Illuminate\Support\Str;
+
+/**
+ * This controller handles everything related to menus in the admin area.
+ */
 class MenuController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Shows a page with a list of all menus.
+     *
+     * Gets all menus from the database and loads a page to display them.
      */
     public function index()
     {
@@ -20,7 +26,9 @@ class MenuController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Shows a form to create a new menu.
+     *
+     * Not used right now.
      */
     public function create()
     {
@@ -28,10 +36,12 @@ class MenuController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Saves a new menu to the database.
+     *
+     * Checks if the input is correct, then creates a new menu with details
+     * like name, icon, and link. It also makes a simple version of the menu name
+     * (like "Main Menu" becomes "main-menu").
      */
-   
-
     public function store(StoreMenuRequest $request)
     {
         $validated = $request->validated();
@@ -52,9 +62,10 @@ class MenuController extends Controller
         return $this->jsonSuccess($menu, 'Menu created successfully.');
     }
 
-
     /**
-     * Display the specified resource.
+     * Shows details of a specific menu.
+     *
+     * Not used right now.
      */
     public function show(string $id)
     {
@@ -62,16 +73,21 @@ class MenuController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Gets a menu to edit it.
+     *
+     * Finds a menu by its ID and sends it back to show in an edit form.
      */
     public function edit(string $id)
     {
         $menu = Menu::findOrFail($id);
-        return $this->jsonSuccess($menu, 'menu fetched successfully.');
+        return $this->jsonSuccess($menu, 'Menu fetched successfully.');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Updates a menu in the database.
+     *
+     * Checks if the new details are correct, then updates the menu
+     * with new information like name, icon, or link.
      */
     public function update(UpdateMenuRequest $request, Menu $menu)
     {
@@ -90,7 +106,9 @@ class MenuController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Deletes a menu from the database.
+     *
+     * Finds a menu by its ID and removes it.
      */
     public function destroy(string $id)
     {
@@ -99,9 +117,16 @@ class MenuController extends Controller
         return $this->jsonSuccess($menu, 'Menu deleted successfully.');
     }
 
+    /**
+     * Gets a list of all active menus.
+     *
+     * Grabs only the active menus and sends them back as a list
+     * for things like showing a navigation menu on a webpage.
+     */
     public function menuList()
     {
-        $query = Menu::select('id', 'title', 'url', 'icon', 'parent_id', 'order', 'data_key', 'status', 'created_at', 'updated_at')->where('status', 1);
+        $query = Menu::select('id', 'title', 'url', 'icon', 'parent_id', 'order', 'data_key', 'status', 'created_at', 'updated_at')
+            ->where('status', 1);
         $data = $query->get();
         return response()->json($data);
     }

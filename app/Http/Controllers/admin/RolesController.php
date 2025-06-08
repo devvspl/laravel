@@ -3,21 +3,20 @@
 namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Roles;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
-use App\Models\Permission;
-use App\Models\PermissionGroup;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
 
-
+/**
+ * This controller manages roles in the admin area, like creating or editing user roles.
+ */
 class RolesController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Shows a page with a list of all roles.
+     *
+     * Gets all roles from the database and loads a page to show them.
      */
     public function index()
     {
@@ -26,7 +25,9 @@ class RolesController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Shows a form to create a new role.
+     *
+     * Not used right now.
      */
     public function create()
     {
@@ -34,7 +35,10 @@ class RolesController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Saves a new role to the database.
+     *
+     * Takes the role name and status, checks if they're correct, and saves the role
+     * with details like who created it and when.
      */
     public function store(StoreRoleRequest $request)
     {
@@ -49,7 +53,9 @@ class RolesController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Shows details of a specific role.
+     *
+     * Not used right now.
      */
     public function show(string $id)
     {
@@ -57,7 +63,9 @@ class RolesController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Gets a role to edit it.
+     *
+     * Finds a role by its ID and sends it back to show in an edit form.
      */
     public function edit(string $id)
     {
@@ -66,7 +74,10 @@ class RolesController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Updates a role in the database.
+     *
+     * Finds the role by ID, checks the new details, and updates it with
+     * the new name, status, and who updated it.
      */
     public function update(UpdateRoleRequest $request, string $id)
     {
@@ -82,7 +93,9 @@ class RolesController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Deletes a role from the database.
+     *
+     * Finds a role by its ID and removes it.
      */
     public function destroy(string $id)
     {
@@ -91,14 +104,15 @@ class RolesController extends Controller
         return $this->jsonSuccess($role, 'Role deleted successfully.');
     }
 
+    /**
+     * Gets a list of all active roles.
+     *
+     * Grabs only the active roles and sends them back as a list
+     * for things like dropdowns or role selection.
+     */
     public function getRoles()
     {
         $roles = Roles::where('status', 1)->get();
         return $this->jsonSuccess($roles, 'Roles retrieved successfully.');
     }
-
-    /**
-     * Show the form for assigning permissions to the role.
-     */
-
 }
