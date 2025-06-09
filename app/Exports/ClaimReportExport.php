@@ -8,13 +8,14 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use Illuminate\Support\Facades\DB;
 
-class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithTitle
+class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithTitle, WithChunkReading
 {
     protected $filters;
     protected $columns;
@@ -39,29 +40,30 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
         $columnsForSelect = array_filter($selectedColumns, fn($col) => $col !== 'e.ExpId');
         $query = DB::table("{$this->table} as e")
             ->leftJoin('claimtype as ct', 'e.ClaimId', '=', 'ct.ClaimId')
-            ->join('hrims.hrm_employee as emp', 'e.FilledBy', '=', 'emp.EmployeeID')
+            ->join('hrims.hrm_employee as emp', 'e.CrBy', '=', 'emp.EmployeeID')
             ->join('hrims.hrm_employee_general as eg', 'emp.EmployeeID', '=', 'eg.EmployeeID')
             ->join('hrims.hrm_employee_eligibility as ee', 'emp.EmployeeID', '=', 'ee.EmployeeID')
             ->join('hrims.core_departments as d', 'eg.DepartmentId', '=', 'd.id')
             ->leftJoin('hrims.core_functions as f', 'eg.EmpFunction', '=', 'f.id')
             ->leftJoin('hrims.core_verticals as v', 'eg.EmpVertical', '=', 'v.id')
             ->leftJoin('hrims.hrm_master_eligibility_policy as p', 'ee.VehiclePolicy', '=', 'p.PolicyId')
-            ->selectRaw('DISTINCT e.ExpId' . (count($columnsForSelect) ? ',' . implode(',', $columnsForSelect) : ''));
+            ->selectRaw('e.ExpId' . (count($columnsForSelect) ? ',' . implode(',', $columnsForSelect) : ''));
 
+        // Apply filters efficiently
         if (!empty($this->filters['function_ids'])) {
-            $query->whereIn('eg.EmpFunction', $this->filters['function_ids']);
+            $query->whereIn('eg.EmpFunction', array_map('intval', $this->filters['function_ids']));
         }
         if (!empty($this->filters['vertical_ids'])) {
-            $query->whereIn('eg.EmpVertical', $this->filters['vertical_ids']);
+            $query->whereIn('eg.EmpVertical', array_map('intval', $this->filters['vertical_ids']));
         }
         if (!empty($this->filters['department_ids'])) {
-            $query->whereIn('eg.DepartmentId', $this->filters['department_ids']);
+            $query->whereIn('eg.DepartmentId', array_map('intval', $this->filters['department_ids']));
         }
         if (!empty($this->filters['user_ids'])) {
             $query->whereIn('emp.EmpCode', $this->filters['user_ids']);
         }
         if (!empty($this->filters['months'])) {
-            $query->whereIn('e.ClaimMonth', $this->filters['months']);
+            $query->whereIn('e.ClaimMonth', array_map('intval', $this->filters['months']));
         }
         if (!empty($this->filters['claim_type_ids'])) {
             if (in_array(7, $this->filters['claim_type_ids'])) {
@@ -70,17 +72,17 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
                     $query->where('e.WType', $this->filters['wheeler_type']);
                 }
             } else {
-                $query->whereIn('e.ClaimId', $this->filters['claim_type_ids']);
+                $query->whereIn('e.ClaimId', array_map('intval', $this->filters['claim_type_ids']));
             }
         }
         if (!empty($this->filters['policy_ids'])) {
-            $query->whereIn('ee.VehiclePolicy', $this->filters['policy_ids']);
+            $query->whereIn('ee.VehiclePolicy', array_map('intval', $this->filters['policy_ids']));
         }
         if (!empty($this->filters['vehicle_types'])) {
             $query->whereIn('ee.VehicleType', $this->filters['vehicle_types']);
         }
         if (!empty($this->filters['claim_statuses'])) {
-            $query->whereIn('e.ClaimAtStep', $this->filters['claim_statuses']);
+            $query->whereIn('e.ClaimAtStep', array_map('intval', $this->filters['claim_statuses']));
         }
         if (!empty($this->filters['from_date']) && !empty($this->filters['to_date'])) {
             $dateColumn = match ($this->filters['date_type']) {
@@ -94,6 +96,11 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
 
         $query->orderBy('e.ExpId', 'desc');
         return $query;
+    }
+
+    public function chunkSize(): int
+    {
+        return 500; // Reduced chunk size for faster processing
     }
 
     public function title(): string
@@ -142,28 +149,13 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
 
     public function map($row): array
     {
-        $monthMap = [
-            1 => 'January',
-            2 => 'February',
-            3 => 'March',
-            4 => 'April',
-            5 => 'May',
-            6 => 'June',
-            7 => 'July',
-            8 => 'August',
-            9 => 'September',
-            10 => 'October',
-            11 => 'November',
-            12 => 'December'
+        static $monthMap = [
+            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
+            7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
         ];
-        $wheelerMap = [2 => '2 Wheeler', 4 => '4 Wheeler'];
-        $statusMap = [
-            1 => 'Draft',
-            2 => 'Submitted',
-            3 => 'Filled',
-            4 => 'Approved',
-            5 => 'Financed',
-            6 => 'Payment',
+        static $wheelerMap = [2 => '2 Wheeler', 4 => '4 Wheeler'];
+        static $statusMap = [
+            1 => 'Draft', 2 => 'Submitted', 3 => 'Filled', 4 => 'Approved', 5 => 'Financed', 6 => 'Payment',
         ];
 
         $data = [];
@@ -260,107 +252,33 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
         $lastColumn = chr(65 + count($this->columns) - 1);
         $lastRow = $sheet->getHighestRow();
 
-
-        $sectionColumns = [
-            'Claim Information' => ['sn', 'claim_id', 'claim_type', 'claim_status', 'emp_name', 'emp_code', 'function', 'vertical', 'department', 'policy', 'vehicle_type', 'month', 'upload_date', 'bill_date', 'claimed_amt'],
-            'Filled Details' => ['FilledAmt', 'FilledDate', 'odomtr_opening', 'odomtr_closing', 'TotKm', 'WType', 'RatePerKM'],
-            'Verification Details' => ['VerifyAmt', 'VerifyTRemark', 'VerifyDate'],
-            'Approval Details' => ['ApprAmt', 'ApprTRemark', 'ApprDate'],
-            'Finance Details' => ['FinancedAmt', 'FinancedTRemark', 'FinancedDate'],
-        ];
-
-
-        $sheet->insertNewRowBefore(1, 1);
-
-
-        $currentColumn = 'A';
-        foreach ($sectionColumns as $section => $columns) {
-            $sectionColumnCount = 0;
-            foreach ($this->columns as $column) {
-                if (in_array($column, $columns)) {
-                    $sectionColumnCount++;
-                }
-            }
-
-            if ($sectionColumnCount > 0) {
-                $startColumn = $currentColumn;
-                $endColumn = chr(ord($currentColumn) + $sectionColumnCount - 1);
-                if ($startColumn !== $endColumn) {
-                    $sheet->mergeCells("{$startColumn}1:{$endColumn}1");
-                }
-                $sheet->setCellValue("{$startColumn}1", $section);
-
-
-                $currentColumn = chr(ord($currentColumn) + $sectionColumnCount);
-            }
-        }
-
-
+        // Simplified styling to reduce processing time
         $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 14,
-                'color' => ['argb' => 'FFFFFFFF'],
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF001868'],
-            ],
-            'alignment' => [
-                'horizontal' => 'center',
-                'vertical' => 'center',
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_MEDIUM,
-                    'color' => ['argb' => 'FF000000'],
-                ],
-            ],
+            'font' => ['bold' => true, 'size' => 12, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF001868']],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
         ]);
-
 
         $sheet->getStyle("A2:{$lastColumn}2")->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 12,
-                'color' => ['argb' => 'FFFFFFFF'],
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF299CDB'],
-            ],
-            'alignment' => [
-                'horizontal' => 'center',
-                'vertical' => 'center',
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF000000'],
-                ],
-            ],
+            'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF299CDB']],
+            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
         ]);
-
 
         if ($lastRow > 2) {
             $sheet->getStyle("A3:{$lastColumn}{$lastRow}")->applyFromArray([
                 'borders' => [
-                    'allBorders' => [
-                        'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['argb' => 'FF000000'],
-                    ],
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF000000']],
                 ],
             ]);
         }
-
 
         foreach (range('A', $lastColumn) as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-
-        $sheet->getRowDimension(1)->setRowHeight(30);
-        $sheet->getRowDimension(2)->setRowHeight(25);
+        $sheet->getRowDimension(1)->setRowHeight(25);
+        $sheet->getRowDimension(2)->setRowHeight(20);
 
         return [];
     }
@@ -374,9 +292,7 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
                 $lastColumn = chr(65 + count($this->columns) - 1);
                 $totalRow = $lastRow + 1;
 
-
                 $sheet->setCellValue("A{$totalRow}", 'Total');
-
 
                 foreach ($this->columns as $index => $column) {
                     if (isset($this->totals[$index])) {
@@ -384,32 +300,15 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
                     }
                 }
 
-
                 $sheet->getStyle("A{$totalRow}:{$lastColumn}{$totalRow}")->applyFromArray([
-                    'font' => [
-                        'bold' => true,
-                        'color' => ['argb' => 'FF000000'],
-                    ],
-                    'fill' => [
-                        'fillType' => 'solid',
-                        'startColor' => ['argb' => 'FFD3D3D3'],
-                    ],
+                    'font' => ['bold' => true, 'color' => ['argb' => 'FF000000']],
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFD3D3D3']],
                     'alignment' => ['horizontal' => 'right'],
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
-                            'color' => ['argb' => 'FF000000'],
-                        ],
-                    ],
                 ]);
-
 
                 if ($this->protectSheets) {
                     $sheet->getProtection()->setSheet(true);
                     $sheet->getProtection()->setPassword('xai2025');
-                    $sheet->getProtection()->setSort(false);
-                    $sheet->getProtection()->setInsertRows(false);
-                    $sheet->getProtection()->setFormatCells(false);
                 }
             },
         ];

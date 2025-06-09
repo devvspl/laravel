@@ -131,10 +131,7 @@ class ReportController extends Controller
                 'vehicle_types' => $request->input('vehicle_types', []),
                 'wheeler_type' => $request->input('wheeler_type')
             ];
-
-            $table = ExpenseClaim::tableName(); 
-
-            
+            $table = ExpenseClaim::tableName();
             $query = \DB::table($table)
                 ->select([
                     \DB::raw("DISTINCT {$table}.ExpId as ExpId"),
@@ -154,15 +151,14 @@ class ReportController extends Controller
                     "{$table}.ClaimAtStep as ClaimStatus"
                 ])
                 ->leftJoin('claimtype', "{$table}.ClaimId", '=', 'claimtype.ClaimId')
-                ->join('hrims.hrm_employee', "{$table}.FilledBy", '=', 'hrims.hrm_employee.EmployeeID')
-                ->join('hrims.hrm_employee_general', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_general.EmployeeID')
-                ->join('hrims.hrm_employee_eligibility', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_eligibility.EmployeeID')
-                ->join('hrims.core_departments', 'hrims.hrm_employee_general.DepartmentId', '=', 'hrims.core_departments.id')
+                ->leftJoin('hrims.hrm_employee', "{$table}.CrBy", '=', 'hrims.hrm_employee.EmployeeID')
+                ->leftJoin('hrims.hrm_employee_general', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_general.EmployeeID')
+                ->leftJoin('hrims.hrm_employee_eligibility', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_eligibility.EmployeeID')
+                ->leftJoin('hrims.core_departments', 'hrims.hrm_employee_general.DepartmentId', '=', 'hrims.core_departments.id')
                 ->leftJoin('hrims.core_functions', 'hrims.hrm_employee_general.EmpFunction', '=', 'hrims.core_functions.id')
                 ->leftJoin('hrims.core_verticals', 'hrims.hrm_employee_general.EmpVertical', '=', 'hrims.core_verticals.id')
                 ->leftJoin('hrims.hrm_master_eligibility_policy', 'hrims.hrm_employee_eligibility.VehiclePolicy', '=', 'hrims.hrm_master_eligibility_policy.PolicyId');
 
-            
             if (!empty($filters['function_ids'])) {
                 $query->whereIn('hrims.hrm_employee_general.EmpFunction', $filters['function_ids']);
             }
@@ -208,18 +204,24 @@ class ReportController extends Controller
             }
 
             $totalRecords = $query->count(\DB::raw("DISTINCT {$table}.ExpId"));
-
             $claims = $query->skip($start)->take($perPage)->get();
+
+            // Capture the last query as SQL
+            $lastQuery = $query->toSql();
+            $bindings = $query->getBindings();
 
             foreach ($claims as $index => $claim) {
                 $claim->Sn = $start + $index + 1;
             }
-
             return response()->json([
                 "draw" => intval($request->input('draw')),
                 "recordsTotal" => $totalRecords,
                 "recordsFiltered" => $totalRecords,
                 "data" => $claims,
+                "last_query" => [
+                    "sql" => $lastQuery,
+                    "bindings" => $bindings
+                ]
             ]);
         } catch (\Exception $e) {
             \Log::error('Claim Filter Error: ' . $e->getMessage());
