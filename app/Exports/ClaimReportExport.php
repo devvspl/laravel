@@ -13,7 +13,6 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use Illuminate\Support\Facades\DB;
 
 class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithStyles, WithEvents, WithTitle, WithChunkReading
 {
@@ -23,84 +22,29 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
     protected $sheetName;
     protected $protectSheets;
     protected $table;
+    protected $query;
+    protected $rowNumber;
 
-    public function __construct(array $filters, array $columns, string $sheetName = 'Claims', bool $protectSheets = false, $table)
+    public function __construct($query, array $filters, array $columns, string $sheetName = 'Claims', bool $protectSheets = false, $table)
     {
+        $this->query = $query;
         $this->filters = $filters;
         $this->columns = $columns;
         $this->totals = [];
         $this->sheetName = $sheetName;
         $this->protectSheets = $protectSheets;
         $this->table = $table;
+        $this->rowNumber = 0;
     }
 
     public function query()
     {
-        $selectedColumns = $this->getSelectedColumns();
-        $columnsForSelect = array_filter($selectedColumns, fn($col) => $col !== 'e.ExpId');
-        $query = DB::table("{$this->table} as e")
-            ->leftJoin('claimtype as ct', 'e.ClaimId', '=', 'ct.ClaimId')
-            ->join('hrims.hrm_employee as emp', 'e.CrBy', '=', 'emp.EmployeeID')
-            ->join('hrims.hrm_employee_general as eg', 'emp.EmployeeID', '=', 'eg.EmployeeID')
-            ->join('hrims.hrm_employee_eligibility as ee', 'emp.EmployeeID', '=', 'ee.EmployeeID')
-            ->join('hrims.core_departments as d', 'eg.DepartmentId', '=', 'd.id')
-            ->leftJoin('hrims.core_functions as f', 'eg.EmpFunction', '=', 'f.id')
-            ->leftJoin('hrims.core_verticals as v', 'eg.EmpVertical', '=', 'v.id')
-            ->leftJoin('hrims.hrm_master_eligibility_policy as p', 'ee.VehiclePolicy', '=', 'p.PolicyId')
-            ->selectRaw('e.ExpId' . (count($columnsForSelect) ? ',' . implode(',', $columnsForSelect) : ''));
-
-        // Apply filters efficiently
-        if (!empty($this->filters['function_ids'])) {
-            $query->whereIn('eg.EmpFunction', array_map('intval', $this->filters['function_ids']));
-        }
-        if (!empty($this->filters['vertical_ids'])) {
-            $query->whereIn('eg.EmpVertical', array_map('intval', $this->filters['vertical_ids']));
-        }
-        if (!empty($this->filters['department_ids'])) {
-            $query->whereIn('eg.DepartmentId', array_map('intval', $this->filters['department_ids']));
-        }
-        if (!empty($this->filters['user_ids'])) {
-            $query->whereIn('emp.EmpCode', $this->filters['user_ids']);
-        }
-        if (!empty($this->filters['months'])) {
-            $query->whereIn('e.ClaimMonth', array_map('intval', $this->filters['months']));
-        }
-        if (!empty($this->filters['claim_type_ids'])) {
-            if (in_array(7, $this->filters['claim_type_ids'])) {
-                $query->where('e.ClaimId', 7);
-                if (!empty($this->filters['wheeler_type'])) {
-                    $query->where('e.WType', $this->filters['wheeler_type']);
-                }
-            } else {
-                $query->whereIn('e.ClaimId', array_map('intval', $this->filters['claim_type_ids']));
-            }
-        }
-        if (!empty($this->filters['policy_ids'])) {
-            $query->whereIn('ee.VehiclePolicy', array_map('intval', $this->filters['policy_ids']));
-        }
-        if (!empty($this->filters['vehicle_types'])) {
-            $query->whereIn('ee.VehicleType', $this->filters['vehicle_types']);
-        }
-        if (!empty($this->filters['claim_statuses'])) {
-            $query->whereIn('e.ClaimAtStep', array_map('intval', $this->filters['claim_statuses']));
-        }
-        if (!empty($this->filters['from_date']) && !empty($this->filters['to_date'])) {
-            $dateColumn = match ($this->filters['date_type']) {
-                'billDate' => 'e.BillDate',
-                'uploadDate' => 'e.CrDate',
-                'filledDate' => 'e.FilledDate',
-                default => 'e.BillDate',
-            };
-            $query->whereBetween($dateColumn, [$this->filters['from_date'], $this->filters['to_date']]);
-        }
-
-        $query->orderBy('e.ExpId', 'desc');
-        return $query;
+        return $this->query;
     }
 
     public function chunkSize(): int
     {
-        return 500; // Reduced chunk size for faster processing
+        return 500;
     }
 
     public function title(): string
@@ -150,19 +94,36 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
     public function map($row): array
     {
         static $monthMap = [
-            1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
-            7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+        1 => 'January',
+        2 => 'February',
+        3 => 'March',
+        4 => 'April',
+        5 => 'May',
+        6 => 'June',
+        7 => 'July',
+        8 => 'August',
+        9 => 'September',
+        10 => 'October',
+        11 => 'November',
+        12 => 'December'
         ];
         static $wheelerMap = [2 => '2 Wheeler', 4 => '4 Wheeler'];
         static $statusMap = [
-            1 => 'Draft', 2 => 'Submitted', 3 => 'Filled', 4 => 'Approved', 5 => 'Financed', 6 => 'Payment',
+        1 => 'Draft',
+        2 => 'Submitted',
+        3 => 'Filled',
+        4 => 'Approved',
+        5 => 'Financed',
+        6 => 'Payment',
         ];
+
+        $this->rowNumber++;
 
         $data = [];
         foreach ($this->columns as $index => $column) {
             $value = match ($column) {
-                'sn' => $row->ExpId,
-                'claim_id' => $row->ClaimId,
+                'sn' => $this->rowNumber,
+                'claim_id' => $row->ClaimId ?? 'N/A',
                 'claim_type' => $row->claim_type_name ?? 'N/A',
                 'claim_status' => $statusMap[$row->ClaimAtStep] ?? 'N/A',
                 'emp_name' => $row->employee_name ?? 'N/A',
@@ -252,33 +213,29 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
         $lastColumn = chr(65 + count($this->columns) - 1);
         $lastRow = $sheet->getHighestRow();
 
-        // Simplified styling to reduce processing time
+        // Style for the first row (header)
         $sheet->getStyle("A1:{$lastColumn}1")->applyFromArray([
             'font' => ['bold' => true, 'size' => 12, 'color' => ['argb' => 'FFFFFFFF']],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF001868']],
             'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
         ]);
 
-        $sheet->getStyle("A2:{$lastColumn}2")->applyFromArray([
-            'font' => ['bold' => true, 'size' => 11, 'color' => ['argb' => 'FFFFFFFF']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF299CDB']],
-            'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
-        ]);
-
-        if ($lastRow > 2) {
-            $sheet->getStyle("A3:{$lastColumn}{$lastRow}")->applyFromArray([
+        // Style for the data rows (starting from A2)
+        if ($lastRow > 1) {
+            $sheet->getStyle("A2:{$lastColumn}{$lastRow}")->applyFromArray([
                 'borders' => [
                     'allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['argb' => 'FF000000']],
                 ],
             ]);
         }
 
+        // Set column widths to auto-size
         foreach (range('A', $lastColumn) as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
+        // Set row heights
         $sheet->getRowDimension(1)->setRowHeight(25);
-        $sheet->getRowDimension(2)->setRowHeight(20);
 
         return [];
     }
@@ -300,9 +257,9 @@ class ClaimReportExport implements FromQuery, WithHeadings, WithMapping, WithSty
                     }
                 }
 
+                // Style for the totals row (no background color)
                 $sheet->getStyle("A{$totalRow}:{$lastColumn}{$totalRow}")->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['argb' => 'FF000000']],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFD3D3D3']],
                     'alignment' => ['horizontal' => 'right'],
                 ]);
 

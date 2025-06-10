@@ -18,7 +18,8 @@ $(document).ready(function () {
         },
     });
 
-    $("#functionSelect, #verticalSelect, #departmentSelect, #subDepartmentSelect, #userSelect, #monthSelect, #claimTypeSelect, #claimStatusSelect, #policySelect, #wheelerTypeSelect, #vehicleTypeSelect"
+    $(
+        "#functionSelect, #verticalSelect, #departmentSelect, #subDepartmentSelect, #userSelect, #monthSelect, #claimTypeSelect, #claimStatusSelect, #policySelect, #wheelerTypeSelect, #vehicleTypeSelect"
     ).select2({
         width: "100%",
         placeholder: "Select options",
@@ -97,10 +98,6 @@ $(document).ready(function () {
             paging: true,
             serverSide: true,
             processing: true,
-            info: true,
-            lengthChange: true,
-            pageLength: 10,
-            lengthMenu: [10, 25, 50, 100],
             ajax: {
                 url: "filter-claims",
                 type: "POST",
@@ -124,79 +121,19 @@ $(document).ready(function () {
                     d.wheeler_type = $("#wheelerTypeSelect").val() || [];
                     d.vehicle_types = $("#vehicleTypeSelect").val() || [];
                 },
-                beforeSend: function () {
-                    startSimpleLoader({ currentTarget: buttonElement });
-                },
-                complete: function () {
-                    endSimpleLoader({ currentTarget: buttonElement });
-                },
-                error: function (xhr) {
-                    console.error("Error fetching claims:", xhr.responseText);
-                    endSimpleLoader({ currentTarget: buttonElement });
-                },
             },
             columns: [
-                { data: "Sn", name: "Sn" },
+                { data: "DT_RowIndex", name: "DT_RowIndex" },
                 { data: "ExpId" },
-                { data: "ClaimType" },
-                { data: "EmpName" },
-                { data: "EmpCode" },
-                {
-                    data: "ClaimMonth",
-                    render: function (data) {
-                        const monthNames = [
-                            "January",
-                            "February",
-                            "March",
-                            "April",
-                            "May",
-                            "June",
-                            "July",
-                            "August",
-                            "September",
-                            "October",
-                            "November",
-                            "December",
-                        ];
-                        return data
-                            ? monthNames[parseInt(data) - 1] || data
-                            : "-";
-                    },
-                },
-                { data: "UploadDate" },
+                { data: "claim_type_name" },
+                { data: "employee_name" },
+                { data: "employee_code" },
+                { data: "ClaimMonth" },
+                { data: "CrDate" },
                 { data: "BillDate" },
-                { data: "ClaimedAmount" },
-                {
-                    data: "ClaimStatus",
-                    render: function (data) {
-                        let badgeClass = "badge bg-secondary";
-                        switch (data) {
-                            case "Saved":
-                            case "Draft":
-                                badgeClass = "badge bg-warning";
-                                break;
-                            case "Submitted":
-                                badgeClass = "badge bg-info";
-                                break;
-                            case "Filled":
-                            case "Paid":
-                                badgeClass = "badge bg-success";
-                                break;
-                            case "Approved":
-                                badgeClass = "badge bg-primary";
-                                break;
-                        }
-                        return `<span class="${badgeClass}">${
-                            data || "Unknown"
-                        }</span>`;
-                    },
-                },
-                {
-                    data: null,
-                    render: function () {
-                        return '<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#claimDetailModal" id="viewClaimDetail"><i class="ri-eye-fill"></i></button>';
-                    },
-                },
+                { data: "FilledTAmt" },
+                { data: "ClaimAtStep" },
+                { data: "action", orderable: false, searchable: false },
             ],
         });
     }
@@ -220,6 +157,11 @@ $(document).ready(function () {
                 });
             });
         } else {
+             table.ajax.reload(function () {
+                endSimpleLoader({
+                    currentTarget: document.getElementById("searchButton"),
+                });
+            });
             console.warn("DataTable not initialized. Initializing now.");
             initializeDataTable(this);
         }
@@ -238,62 +180,61 @@ $(document).ready(function () {
             .get();
 
         const filters = {
-            functionSelect: $("#functionSelect option:selected")
+            function_ids: $("#functionSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            verticalSelect: $("#verticalSelect option:selected")
+            vertical_ids: $("#verticalSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            departmentSelect: $("#departmentSelect option:selected")
+            department_ids: $("#departmentSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            userSelect: $("#userSelect option:selected")
+            user_ids: $("#userSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            monthSelect: $("#monthSelect option:selected")
+            months: $("#monthSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            claimTypeSelect: $("#claimTypeSelect option:selected")
+            claim_type_ids: $("#claimTypeSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            claimStatusSelect: $("#claimStatusSelect option:selected")
+            claim_statuses: $("#claimStatusSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            fromDate: $("#fromDate").val(),
-            toDate: $("#toDate").val(),
-            dateType: $('input[name="dateType"]:checked').val() || "billDate",
-            policySelect: $("#policySelect option:selected")
+            from_date: $("#fromDate").val(),
+            to_date: $("#toDate").val(),
+            date_type: $('input[name="dateType"]:checked').val() || "billDate",
+            policy_ids: $("#policySelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            wheelerTypeSelect: $("#wheelerTypeSelect option:selected")
+            wheeler_type: $("#wheelerTypeSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
-            vehicleTypeSelect: $("#vehicleTypeSelect option:selected")
+            vehicle_types: $("#vehicleTypeSelect option:selected")
                 .map(function () {
                     return this.value;
                 })
                 .get(),
         };
 
-        // Add report type and protect sheets option to the payload
         const reportType = $("#reportType").val();
         const protectSheets = $("#protectSheets").is(":checked");
 

@@ -342,59 +342,61 @@ $(document).ready(function () {
                         const permissions = groupedPermissions[group];
                         const accordionId = `all-accor-plus-${index}`;
                         let accordionHtml = `
-                            <div class="accordion-item material-shadow">
-                                <h2 class="accordion-header" id="all-accordionwithplus-${index}">
-                                    <button class="accordion-button ${
-                                        index === 0 ? "" : "collapsed"
-                                    }" type="button" 
-                                            data-bs-toggle="collapse" 
-                                            data-bs-target="#${accordionId}" 
-                                            aria-expanded="${
-                                                index === 0 ? "true" : "false"
-                                            }" 
-                                            aria-controls="${accordionId}">
-                                        ${group}
-                                    </button>
-                                </h2>
-                                <div id="${accordionId}" 
-                                     class="accordion-collapse collapse ${
-                                         index === 0 ? "show" : ""
-                                     }" 
-                                     aria-labelledby="all-accordionwithplus-${index}" 
-                                     data-bs-parent="#all-permissions-table-container">
-                                    <div class="accordion-body">
-                        `;
+                <div class="accordion-item material-shadow">
+                    <h2 class="accordion-header" id="all-accordionwithplus-${index}">
+                        <button class="accordion-button ${
+                            index === 0 ? "" : "collapsed"
+                        }" type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#${accordionId}" 
+                                aria-expanded="${
+                                    index === 0 ? "true" : "false"
+                                }" 
+                                aria-controls="${accordionId}">
+                            ${group}
+                        </button>
+                    </h2>
+                    <div id="${accordionId}" 
+                         class="accordion-collapse collapse ${
+                             index === 0 ? "show" : ""
+                         }" 
+                         aria-labelledby="all-accordionwithplus-${index}" 
+                         data-bs-parent="#all-permissions-table-container">
+                        <div class="accordion-body">
+                            <div class="row">
+            `;
 
                         permissions.forEach((permission) => {
                             const isAssigned = userPermissions.includes(
                                 permission.id
                             );
                             accordionHtml += `
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span>${permission.name}</span>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input permission-toggle" 
-                                               type="checkbox" 
-                                               role="switch" 
-                                               id="all-toggle-${permission.id}" 
-                                               data-user-id="${userId}" 
-                                               data-permission-id="${
-                                                   permission.id
-                                               }" 
-                                               ${isAssigned ? "checked" : ""}>
-                                        <label class="form-check-label" for="all-toggle-${
-                                            permission.id
-                                        }"></label>
-                                    </div>
-                                </div>
-                            `;
+                    <div class="col-4 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>${permission.name}</span>
+                            <div class="form-check form-switch" style="margin-top: 0px;">
+                                <input class="form-check-input permission-toggle" 
+                                       type="checkbox" 
+                                       role="switch" 
+                                       id="all-toggle-${permission.id}" 
+                                       data-user-id="${userId}" 
+                                       data-permission-id="${permission.id}" 
+                                       ${isAssigned ? "checked" : ""}>
+                                <label class="form-check-label" for="all-toggle-${
+                                    permission.id
+                                }"></label>
+                            </div>
+                        </div>
+                    </div>
+                `;
                         });
 
                         accordionHtml += `
-                                    </div>
-                                </div>
                             </div>
-                        `;
+                        </div>
+                    </div>
+                </div>
+            `;
                         tableContainer.append(accordionHtml);
                     });
                 }

@@ -242,3 +242,6 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
 #additionalFilters.show + .ri-equalizer-line {
     transform: rotate(90deg);
 }
+.accordion .accordion-body {
+    color: var(--vz-accordion-color) !important;
+}
