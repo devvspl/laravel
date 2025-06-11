@@ -1,6 +1,7 @@
 $(document).ready(function () {
     $("#reportType").select2({ dropdownParent: $("#exportModal") });
-    const fromPicker = flatpickr("#fromDate", {
+
+    flatpickr("#fromDate", {
         dateFormat: "Y-m-d",
         disable: [],
         enableYearSelection: true,
@@ -9,7 +10,7 @@ $(document).ready(function () {
         },
     });
 
-    const toPicker = flatpickr("#toDate", {
+    flatpickr("#toDate", {
         dateFormat: "Y-m-d",
         disable: [],
         enableYearSelection: true,
@@ -18,16 +19,190 @@ $(document).ready(function () {
         },
     });
 
-    $(
-        "#functionSelect, #verticalSelect, #departmentSelect, #subDepartmentSelect, #userSelect, #monthSelect, #claimTypeSelect, #claimStatusSelect, #policySelect, #wheelerTypeSelect, #vehicleTypeSelect"
-    ).select2({
-        width: "100%",
-        placeholder: "Select options",
-        allowClear: true,
+    const selectElements = [
+        "#functionSelect",
+        "#verticalSelect",
+        "#departmentSelect",
+        "#subDepartmentSelect",
+        "#userSelect",
+        "#monthSelect",
+        "#claimTypeSelect",
+        "#claimStatusSelect",
+        "#policySelect",
+        "#wheelerTypeSelect",
+        "#vehicleTypeSelect",
+    ];
+
+    selectElements.forEach((selector) => {
+        $(selector).select2({
+            width: "100%",
+            placeholder: "Select options",
+            allowClear: true,
+        });
+    });
+
+    $(document).on("change", "#functionSelect", function () {
+        const selectedFunctions = $(this).val() || [];
+        $.ajax({
+            url: "verticals/by-function",
+            type: "POST",
+            data: JSON.stringify({ function_ids: selectedFunctions }),
+            contentType: "application/json",
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    let verticalOptions =
+                        '<option value="">Select options</option>';
+                    response.data.forEach((vertical) => {
+                        verticalOptions += `<option value="${vertical.id}">${vertical.vertical_name}</option>`;
+                    });
+                    $("#verticalSelect").html(verticalOptions);
+                    $("#verticalSelect").select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+                } else {
+                    console.error(
+                        "Failed to fetch verticals:",
+                        response.message
+                    );
+                    $("#verticalSelect")
+                        .html('<option value="">Select options</option>')
+                        .select2({
+                            placeholder: "Select options",
+                            allowClear: true,
+                            width: "100%",
+                        });
+                }
+            },
+            error: function (xhr) {
+                console.error("Error fetching verticals:", xhr.responseText);
+                $("#verticalSelect")
+                    .html('<option value="">Error loading verticals</option>')
+                    .select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+            },
+        });
+    });
+
+    $(document).on("change", "#verticalSelect", function () {
+        const selectedVerticals = $(this).val() || [];
+        $.ajax({
+            url: "departments/by-vertical",
+            type: "POST",
+            data: JSON.stringify({ vertical_ids: selectedVerticals }),
+            contentType: "application/json",
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    let deptOptions =
+                        '<option value="">Select options</option>';
+                    response.data.forEach((dept) => {
+                        deptOptions += `<option value="${dept.id}">${dept.department_name}</option>`;
+                    });
+                    $("#departmentSelect").html(deptOptions);
+                    $("#departmentSelect").select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+
+                    $("#subDepartmentSelect, #userSelect")
+                        .html('<option value="">Select options</option>')
+                        .select2({
+                            placeholder: "Select options",
+                            allowClear: true,
+                            width: "100%",
+                        });
+                } else {
+                    console.error(
+                        "Failed to fetch departments:",
+                        response.message
+                    );
+                    $("#departmentSelect")
+                        .html('<option value="">Select options</option>')
+                        .select2({
+                            placeholder: "Select options",
+                            allowClear: true,
+                            width: "100%",
+                        });
+                }
+            },
+            error: function (xhr) {
+                console.error("Error fetching departments:", xhr.responseText);
+                $("#departmentSelect")
+                    .html('<option value="">Error loading departments</option>')
+                    .select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+            },
+        });
     });
 
     $(document).on("change", "#departmentSelect", function () {
-        let selectedDepartments = $(this).val() || [];
+        const selectedDepartments = $(this).val() || [];
+        $.ajax({
+            url: "sub-departments/by-department",
+            type: "POST",
+            data: JSON.stringify({ department_ids: selectedDepartments }),
+            contentType: "application/json",
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    let subDeptOptions =
+                        '<option value="">Select options</option>';
+                    response.data.forEach((subDept) => {
+                        subDeptOptions += `<option value="${subDept.id}">${subDept.sub_department_name}</option>`;
+                    });
+                    $("#subDepartmentSelect").html(subDeptOptions);
+                    $("#subDepartmentSelect").select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+                } else {
+                    console.error(
+                        "Failed to fetch sub-departments:",
+                        response.message
+                    );
+                    $("#subDepartmentSelect")
+                        .html('<option value="">Select options</option>')
+                        .select2({
+                            placeholder: "Select options",
+                            allowClear: true,
+                            width: "100%",
+                        });
+                }
+            },
+            error: function (xhr) {
+                console.error(
+                    "Error fetching sub-departments:",
+                    xhr.responseText
+                );
+                $("#subDepartmentSelect")
+                    .html(
+                        '<option value="">Error loading sub-departments</option>'
+                    )
+                    .select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+            },
+        });
+
         $.ajax({
             url: "employees/by-department",
             type: "POST",
@@ -38,21 +213,18 @@ $(document).ready(function () {
             },
             success: function (response) {
                 if (response.success) {
-                    let userOptions = "";
+                    let userOptions =
+                        '<option value="">Select options</option>';
                     response.data.forEach((employee) => {
-                        let fullName = `${employee.Fname} ${
+                        const fullName = `${employee.Fname} ${
                             employee.Sname || ""
                         } ${employee.Lname}`.trim();
-                        let optionText = `${employee.EmpCode} - ${fullName}`;
-                        let statusClass =
+                        const optionText = `${employee.EmpCode} - ${fullName}`;
+                        const statusClass =
                             employee.EmpStatus === "D" ? "deactivated" : "";
                         userOptions += `<option value="${employee.EmployeeID}" data-status="${employee.EmpStatus}" class="${statusClass}">${optionText}</option>`;
                     });
-                    $("#userSelect").html(
-                        userOptions ||
-                            '<option value="">No users available</option>'
-                    );
-
+                    $("#userSelect").html(userOptions);
                     $("#userSelect").select2({
                         placeholder: "Select options",
                         allowClear: true,
@@ -60,33 +232,83 @@ $(document).ready(function () {
                     });
                 } else {
                     console.error("Failed to fetch users:", response.message);
-                    $("#userSelect").html(
-                        '<option value="">Select options</option>'
-                    );
+                    $("#userSelect")
+                        .html('<option value="">Select options</option>')
+                        .select2({
+                            placeholder: "Select options",
+                            allowClear: true,
+                            width: "100%",
+                        });
+                }
+            },
+            error: function (xhr) {
+                console.error("Error fetching users:", xhr.responseText);
+                $("#userSelect")
+                    .html('<option value="">Error loading users</option>')
+                    .select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
+            },
+        });
+    });
+
+    $(document).on("change", "#subDepartmentSelect", function () {
+        const selectedSubDepts = $(this).val() || [];
+        $.ajax({
+            url: "employees/by-department",
+            type: "POST",
+            data: JSON.stringify({ sub_department_ids: selectedSubDepts }),
+            contentType: "application/json",
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+                if (response.success) {
+                    let userOptions =
+                        '<option value="">Select options</option>';
+                    response.data.forEach((employee) => {
+                        const fullName = `${employee.Fname} ${
+                            employee.Sname || ""
+                        } ${employee.Lname}`.trim();
+                        const optionText = `${employee.EmpCode} - ${fullName}`;
+                        const statusClass =
+                            employee.EmpStatus === "D" ? "deactivated" : "";
+                        userOptions += `<option value="${employee.EmployeeID}" data-status="${employee.EmpStatus}" class="${statusClass}">${optionText}</option>`;
+                    });
+                    $("#userSelect").html(userOptions);
                     $("#userSelect").select2({
                         placeholder: "Select options",
                         allowClear: true,
                         width: "100%",
                     });
+                } else {
+                    console.error("Failed to fetch users:", response.message);
+                    $("#userSelect")
+                        .html('<option value="">Select options</option>')
+                        .select2({
+                            placeholder: "Select options",
+                            allowClear: true,
+                            width: "100%",
+                        });
                 }
             },
             error: function (xhr) {
                 console.error("Error fetching users:", xhr.responseText);
-                $("#userSelect").html(
-                    '<option value="">Error loading users</option>'
-                );
-                $("#userSelect").select2({
-                    placeholder: "Select options",
-                    allowClear: true,
-                    width: "100%",
-                });
+                $("#userSelect")
+                    .html('<option value="">Error loading users</option>')
+                    .select2({
+                        placeholder: "Select options",
+                        allowClear: true,
+                        width: "100%",
+                    });
             },
         });
     });
 
     let table = null;
-
-    function initializeDataTable(buttonElement = null) {
+    if ($("#searchButton").length) {
         if ($.fn.DataTable.isDataTable("#claimReportTable")) {
             table.destroy();
             $("#claimReportTable").empty();
@@ -110,6 +332,8 @@ $(document).ready(function () {
                     d.function_ids = $("#functionSelect").val() || [];
                     d.vertical_ids = $("#verticalSelect").val() || [];
                     d.department_ids = $("#departmentSelect").val() || [];
+                    d.sub_department_ids =
+                        $("#subDepartmentSelect").val() || [];
                     d.user_ids = $("#userSelect").val() || [];
                     d.months = $("#monthSelect").val() || [];
                     d.claim_type_ids = $("#claimTypeSelect").val() || [];
@@ -126,8 +350,13 @@ $(document).ready(function () {
                 { data: "DT_RowIndex", name: "DT_RowIndex" },
                 { data: "ExpId" },
                 { data: "claim_type_name" },
-                { data: "employee_name" },
-                { data: "employee_code" },
+                {
+                    data: null,
+                    name: "employee_display",
+                    render: function (data, type, row) {
+                        return row.employee_code + " - " + row.employee_name;
+                    },
+                },
                 { data: "ClaimMonth" },
                 { data: "CrDate" },
                 { data: "BillDate" },
@@ -136,42 +365,34 @@ $(document).ready(function () {
                 { data: "action", orderable: false, searchable: false },
             ],
         });
-    }
-
-    const searchButton = document.getElementById("searchButton");
-    if (searchButton) {
-        initializeDataTable(searchButton);
     } else {
-        console.warn("Search button not found. DataTable not initialized.");
+        showAlert(
+            "danger",
+            "ri-error-warning-line",
+            "Search button not found. DataTable not initialized"
+        );
     }
 
     $("#searchButton").on("click", function () {
         if (table) {
-            startSimpleLoader({
-                currentTarget: this,
-            });
-
+            startSimpleLoader({ currentTarget: this });
             table.ajax.reload(function () {
-                endSimpleLoader({
-                    currentTarget: document.getElementById("searchButton"),
-                });
+                endSimpleLoader({ currentTarget: $("#searchButton")[0] });
             });
         } else {
-             table.ajax.reload(function () {
-                endSimpleLoader({
-                    currentTarget: document.getElementById("searchButton"),
-                });
-            });
-            console.warn("DataTable not initialized. Initializing now.");
-            initializeDataTable(this);
+            showAlert(
+                "danger",
+                "ri-error-warning-line",
+                "DataTable not initialized"
+            );
         }
     });
 
     $("#exportModal").on("show.bs.modal", function () {
-        var modalFilters = $("#modalFilters");
+        const modalFilters = $("#modalFilters");
     });
 
-    $("#exportExcelBtn").on("click", function (e) {
+    $("#exportExcelBtn").on("click", function () {
         const button = this;
         const columns = $(".column-checkbox:checked")
             .map(function () {
@@ -179,86 +400,42 @@ $(document).ready(function () {
             })
             .get();
 
-        const filters = {
-            function_ids: $("#functionSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            vertical_ids: $("#verticalSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            department_ids: $("#departmentSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            user_ids: $("#userSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            months: $("#monthSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            claim_type_ids: $("#claimTypeSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            claim_statuses: $("#claimStatusSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            from_date: $("#fromDate").val(),
-            to_date: $("#toDate").val(),
-            date_type: $('input[name="dateType"]:checked').val() || "billDate",
-            policy_ids: $("#policySelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            wheeler_type: $("#wheelerTypeSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-            vehicle_types: $("#vehicleTypeSelect option:selected")
-                .map(function () {
-                    return this.value;
-                })
-                .get(),
-        };
-
-        const reportType = $("#reportType").val();
-        const protectSheets = $("#protectSheets").is(":checked");
-
         if (columns.length === 0) {
             alert("Please select at least one column to export.");
             return;
         }
+
+        const filters = {
+            function_ids: $("#functionSelect").val() || [],
+            vertical_ids: $("#verticalSelect").val() || [],
+            department_ids: $("#departmentSelect").val() || [],
+            sub_department_ids: $("#subDepartmentSelect").val() || [],
+            user_ids: $("#userSelect").val() || [],
+            months: $("#monthSelect").val() || [],
+            claim_type_ids: $("#claimTypeSelect").val() || [],
+            claim_statuses: $("#claimStatusSelect").val() || [],
+            from_date: $("#fromDate").val(),
+            to_date: $("#toDate").val(),
+            date_type: $('input[name="dateType"]:checked').val() || "billDate",
+            policy_ids: $("#policySelect").val() || [],
+            wheeler_type: $("#wheelerTypeSelect").val() || [],
+            vehicle_types: $("#vehicleTypeSelect").val() || [],
+        };
 
         $.ajax({
             url: "/expense-claims/export",
             method: "POST",
             data: JSON.stringify({
                 columns,
-                reportType,
-                protectSheets,
+                reportType: $("#reportType").val(),
+                protectSheets: $("#protectSheets").is(":checked"),
                 ...filters,
             }),
             contentType: "application/json",
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
-            xhrFields: {
-                responseType: "blob",
-            },
+            xhrFields: { responseType: "blob" },
             beforeSend: function () {
                 startLoader({ currentTarget: button });
             },
@@ -286,14 +463,31 @@ $(document).ready(function () {
                 window.URL.revokeObjectURL(url);
                 $("#exportModal").modal("hide");
             },
-            error: function (xhr, status, error) {
-                console.error("Export error:", error);
+            error: function (xhr) {
+                console.error("Export error:", xhr.responseText);
                 alert(
                     "Failed to export data. Please try again or contact support."
                 );
             },
             complete: function () {
                 endLoader({ currentTarget: button });
+            },
+        });
+    });
+
+    $(document).on("click", "#viewClaimDetail", function () {
+        var claimId = $(this).data("claim-id");
+        $.ajax({
+            url: "/get-claim-detail-view",
+            method: "GET",
+            data: { claim_id: claimId },
+            success: function (response) {
+                $("#claimDetailContent").html(response.html);
+            },
+            error: function () {
+                $("#claimDetailContent").html(
+                    '<div class="text-danger">Failed to load data.</div>'
+                );
             },
         });
     });

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\CoreFunctions;
 use App\Models\CoreVertical;
 use App\Models\CoreDepartments;
+use App\Models\CoreSubDepartment;
 use App\Models\HRMEmployees;
 use App\Models\EligibilityPolicy;
 use App\Models\ClaimType;
@@ -39,6 +40,7 @@ class ReportController extends Controller
             $functions = CoreFunctions::where('is_active', 1)->get(['id', 'function_name']);
             $verticals = CoreVertical::where('is_active', 1)->get(['id', 'vertical_name']);
             $departments = CoreDepartments::where('is_active', 1)->get(['id', 'department_name']);
+            $sub_departments = CoreSubDepartment::where('is_active', 1)->get(['id', 'sub_department_name']);
             $employees = HRMEmployees::select(
                 'hrims.hrm_employee.EmployeeID',
                 'hrims.hrm_employee.EmpCode',
@@ -52,7 +54,7 @@ class ReportController extends Controller
 
             $claimTypes = ClaimType::where('ClaimStatus', 'A')->get(['ClaimId', 'ClaimName']);
             $eligibility_policy = EligibilityPolicy::where('CompanyId', session('company_id'))->get(['PolicyId', 'PolicyName']);
-            return view('admin.claim_report', compact('functions', 'verticals', 'departments', 'employees', 'claimTypes', 'eligibility_policy'));
+            return view('admin.claim_report', compact('functions', 'verticals', 'departments', 'sub_departments', 'employees', 'claimTypes', 'eligibility_policy'));
         } catch (\Exception $e) {
 
             return back()->withErrors(['error' => 'Could not load the claim report page: ' . $e->getMessage()]);
@@ -76,39 +78,6 @@ class ReportController extends Controller
     }
 
     /**
-     * Gets a list of employees for selected departments.
-     *
-     * This method finds employees based on the company and department(s) chosen, then returns their details
-     * (like ID, code, and name) as a JSON response for use in dropdowns or tables.
-     */
-    public function getEmployeesByDepartment(Request $request)
-    {
-        try {
-
-            $departmentIds = $request->input('department_ids', []);
-            $query = HRMEmployees::select(
-                'hrims.hrm_employee.EmployeeID',
-                'hrims.hrm_employee.EmpCode',
-                'hrims.hrm_employee.Fname',
-                'hrims.hrm_employee.Sname',
-                'hrims.hrm_employee.Lname',
-                'hrims.hrm_employee.EmpStatus'
-            )
-                ->join('hrims.hrm_employee_general', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_general.EmployeeID')
-                ->where('hrims.hrm_employee.CompanyId', session('company_id'));
-
-            if (!empty($departmentIds)) {
-                $query->whereIn('hrims.hrm_employee_general.DepartmentId', $departmentIds);
-            }
-            $employees = $query->get();
-            return $this->jsonSuccess($employees, 'Employees loaded successfully.');
-        } catch (\Exception $e) {
-
-            return $this->jsonError('Could not load employees: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Builds a query for expense claims with filters.
      *
      * This helper method creates a database query to fetch expense claims, joining tables like employees,
@@ -127,6 +96,7 @@ class ReportController extends Controller
                 DB::raw("MAX(hrims.core_functions.function_name) as function_name"),
                 DB::raw("MAX(hrims.core_verticals.vertical_name) as vertical_name"),
                 DB::raw("MAX(hrims.core_departments.department_name) as department_name"),
+                DB::raw("MAX(hrims.core_sub_department_master.sub_department_name) as sub_department_name"),
                 DB::raw("MAX(hrims.hrm_master_eligibility_policy.PolicyName) as policy_name"),
                 DB::raw("MAX(hrims.hrm_employee_eligibility.VehicleType) as vehicle_type"),
                 DB::raw("MAX({$table}.ClaimMonth) as ClaimMonth"),
@@ -155,12 +125,13 @@ class ReportController extends Controller
             ->leftJoin('hrims.hrm_employee_general', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_general.EmployeeID')
             ->leftJoin('hrims.hrm_employee_eligibility', 'hrims.hrm_employee.EmployeeID', '=', 'hrims.hrm_employee_eligibility.EmployeeID')
             ->leftJoin('hrims.core_departments', 'hrims.hrm_employee_general.DepartmentId', '=', 'hrims.core_departments.id')
+            ->leftJoin('hrims.core_sub_department_master', 'hrims.hrm_employee_general.SubDepartmentId', '=', 'hrims.core_sub_department_master.id')
             ->leftJoin('hrims.core_functions', 'hrims.hrm_employee_general.EmpFunction', '=', 'hrims.core_functions.id')
             ->leftJoin('hrims.core_verticals', 'hrims.hrm_employee_general.EmpVertical', '=', 'hrims.core_verticals.id')
             ->leftJoin('hrims.hrm_master_eligibility_policy', 'hrims.hrm_employee_eligibility.VehiclePolicy', '=', 'hrims.hrm_master_eligibility_policy.PolicyId')
             ->groupBy("{$table}.ExpId")
             ->orderBy("{$table}.ExpId", 'asc');
-            
+
         $query = $this->applyClaimFilters($query, $filters, $table);
         return $query;
     }
@@ -178,6 +149,7 @@ class ReportController extends Controller
                 'function_ids' => $request->input('function_ids', []),
                 'vertical_ids' => $request->input('vertical_ids', []),
                 'department_ids' => $request->input('department_ids', []),
+                'sub_department_ids' => $request->input('sub_department_ids', []),
                 'user_ids' => $request->input('user_ids', []),
                 'months' => $request->input('months', []),
                 'claim_type_ids' => $request->input('claim_type_ids', []),
@@ -191,10 +163,10 @@ class ReportController extends Controller
             ];
 
             $table = ExpenseClaim::tableName();
-            $query = $this->buildClaimQuery($filters, $table); 
+            $query = $this->buildClaimQuery($filters, $table);
 
             return DataTables::of($query)
-                ->addIndexColumn() 
+                ->addIndexColumn()
                 ->editColumn('ClaimAtStep', function ($row) {
                     $badgeClass = 'bg-secondary-subtle text-secondary';
                     $statusText = 'Unknown';
@@ -229,9 +201,9 @@ class ReportController extends Controller
                     return '<span class="badge ' . $badgeClass . ' badge-border">' . $statusText . '</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    return '<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#claimDetailModal" id="viewClaimDetail"><i class="ri-eye-fill"></i></button>';
+                    return '<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-claim-id='.$row->ClaimId.' data-expid='.$row->ExpId.' data-bs-target="#claimDetailModal" id="viewClaimDetail"><i class="ri-eye-fill"></i></button>';
                 })
-                ->rawColumns(['ClaimAtStep', 'action']) 
+                ->rawColumns(['ClaimAtStep', 'action'])
                 ->make(true);
 
         } catch (\Exception $e) {
@@ -324,6 +296,11 @@ class ReportController extends Controller
         }
 
 
+        if (!empty($filters['sub_department_ids'])) {
+            $query->whereIn('hrims.hrm_employee_general.SubDepartmentId', $filters['sub_department_ids']);
+        }
+
+
         if (!empty($filters['user_ids'])) {
             $query->whereIn('hrims.hrm_employee.EmpCode', $filters['user_ids']);
         }
@@ -384,67 +361,67 @@ class ReportController extends Controller
     public function getDailyActivityData(Request $request)
     {
         try {
-
             $fromDate = $request->input('fromDate');
             $toDate = $request->input('toDate');
 
-
             $table = ExpenseClaim::tableName();
-
 
             $baseQuery = DB::table("{$table} as e")
                 ->where('e.ClaimStatus', '!=', 'Deactivate')
                 ->whereNotIn('e.ClaimId', [19, 20, 21]);
 
-
+            // Upload
             $uploadQuery = (clone $baseQuery)
                 ->selectRaw('DATE(e.CrDate) AS ActionDate, COUNT(*) AS TotalUpload, 0 AS Punching, 0 AS Verified, 0 AS Approved, 0 AS Financed')
                 ->where('e.CrDate', '!=', '0000-00-00')
                 ->whereBetween(DB::raw('DATE(e.CrDate)'), [$fromDate, $toDate])
                 ->groupBy(DB::raw('DATE(e.CrDate)'));
 
-
+            // Punching
             $punchingQuery = (clone $baseQuery)
                 ->selectRaw('DATE(e.FilledDate) AS ActionDate, 0 AS TotalUpload, COUNT(*) AS Punching, 0 AS Verified, 0 AS Approved, 0 AS Financed')
                 ->where('e.FilledDate', '!=', '0000-00-00')
                 ->whereBetween(DB::raw('DATE(e.FilledDate)'), [$fromDate, $toDate])
                 ->groupBy(DB::raw('DATE(e.FilledDate)'));
 
-
+            // Verified
             $verifiedQuery = (clone $baseQuery)
                 ->selectRaw('DATE(e.VerifyDate) AS ActionDate, 0 AS TotalUpload, 0 AS Punching, COUNT(*) AS Verified, 0 AS Approved, 0 AS Financed')
                 ->where('e.VerifyDate', '!=', '0000-00-00')
                 ->whereBetween(DB::raw('DATE(e.VerifyDate)'), [$fromDate, $toDate])
                 ->groupBy(DB::raw('DATE(e.VerifyDate)'));
 
-
+            // Approved
             $approvedQuery = (clone $baseQuery)
                 ->selectRaw('DATE(e.ApprDate) AS ActionDate, 0 AS TotalUpload, 0 AS Punching, 0 AS Verified, COUNT(*) AS Approved, 0 AS Financed')
                 ->where('e.ApprDate', '!=', '0000-00-00')
                 ->whereBetween(DB::raw('DATE(e.ApprDate)'), [$fromDate, $toDate])
                 ->groupBy(DB::raw('DATE(e.ApprDate)'));
 
-
+            // Financed
             $financedQuery = (clone $baseQuery)
                 ->selectRaw('DATE(e.FinancedDate) AS ActionDate, 0 AS TotalUpload, 0 AS Punching, 0 AS Verified, 0 AS Approved, COUNT(*) AS Financed')
                 ->where('e.FinancedDate', '!=', '0000-00-00')
                 ->whereBetween(DB::raw('DATE(e.FinancedDate)'), [$fromDate, $toDate])
                 ->groupBy(DB::raw('DATE(e.FinancedDate)'));
 
-
-            $data = $uploadQuery
+            // Combine all queries using unionAll
+            $unionQuery = $uploadQuery
                 ->unionAll($punchingQuery)
                 ->unionAll($verifiedQuery)
                 ->unionAll($approvedQuery)
-                ->unionAll($financedQuery)
-                ->newQuery()
+                ->unionAll($financedQuery);
+
+            // Wrap union query as subquery
+            $finalQuery = DB::table(DB::raw("({$unionQuery->toSql()}) as sub"))
+                ->mergeBindings($unionQuery) // Important to pass bindings from union
                 ->selectRaw('ActionDate, SUM(TotalUpload) AS TotalUpload, SUM(Punching) AS Punching, SUM(Verified) AS Verified, SUM(Approved) AS Approved, SUM(Financed) AS Financed')
                 ->groupBy('ActionDate')
                 ->orderBy('ActionDate')
                 ->get();
 
-
-            $formattedData = $data->map(function ($row) {
+            // Format data
+            $formattedData = $finalQuery->map(function ($row) {
                 return [
                     'ActionDate' => $row->ActionDate,
                     'TotalUpload' => $row->TotalUpload,
@@ -455,14 +432,14 @@ class ReportController extends Controller
                 ];
             })->toArray();
 
-
             return $this->jsonSuccess($formattedData, 'Daily activity data loaded successfully.');
-        } catch (\Exception $e) {
 
+        } catch (\Exception $e) {
             \Log::error('Daily Activity Data Error: ' . $e->getMessage());
             return $this->jsonError('Could not load daily activity data: ' . $e->getMessage());
         }
     }
+
 
     /**
      * Exports daily activity data to an Excel file.

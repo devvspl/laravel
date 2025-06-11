@@ -8,7 +8,7 @@
             <div class="col-xl-12">
                 <div class="card card-height-100">
                     <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Claim Report</h4>
+                        <h4 class="card-title mb-0 flex-grow-1">Generate Claim Report</h4>
                         <div class="flex-shrink-0 ms-2">
                             <button class="btn btn-soft-primary btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#exportModal">
@@ -54,7 +54,10 @@
                                 <div class="col-md-3">
                                     <label for="subDepartmentSelect" class="form-label mt-1">Sub Department</label>
                                     <select class="form-select" id="subDepartmentSelect" multiple>
-                                       
+                                         @foreach ($sub_departments as $sub_department)
+                                            <option value="{{ $sub_department->id }}">{{ $sub_department->sub_department_name }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                             @endcan
@@ -149,7 +152,7 @@
                                     <i class="ri-check-double-line label-icon align-middle rounded-pill fs-16 me-2">
                                         <span class="loader" style="display: none;"></span>
                                     </i>
-                                    Search
+                                    Get Report
                                 </button>
                             </div>
                             <div class="col-12 mt-3">
@@ -204,7 +207,6 @@
                                     <th>Claim ID</th>
                                     <th>Claim Type</th>
                                     <th>Emp Name</th>
-                                    <th>Emp Code</th>
                                     <th>Month</th>
                                     <th>Upload Date</th>
                                     <th>Bill Date</th>
@@ -222,6 +224,7 @@
     </div>
 </div>
 <x-modal.claim_report />
+<x-modal.view_claim_detail />
 @endsection
 @push('styles')
 <link rel="stylesheet" href="assets/libs/@simonwep/pickr/themes/classic.min.css" />

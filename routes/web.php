@@ -9,6 +9,8 @@ use App\Http\Controllers\admin\UsersController;
 use App\Http\Controllers\admin\SettingController;
 use App\Http\Controllers\admin\ReportController;
 use App\Http\Controllers\admin\FinancialYearController;
+use App\Http\Controllers\admin\FilterController;
+use App\Http\Controllers\admin\ClaimViewController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 
@@ -96,11 +98,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/functions', [ReportController::class, 'getFunction'])->name('report.functions');
     Route::get('/verticals', [ReportController::class, 'getVertical'])->name('report.verticals');
     Route::get('/departments', [ReportController::class, 'getDepartment'])->name('report.departments');
-    Route::post('/employees/by-department', [ReportController::class, 'getEmployeesByDepartment'])->name('report.employees.by_department');
     Route::get('/claim-types', [ReportController::class, 'getClaimTypes'])->name('report.claim_types');
     Route::post('/filter-claims', [ReportController::class, 'filterClaims'])->name('report.filter_claims');
     Route::post('/expense-claims/export', [ReportController::class, 'export'])->name('expense-claims.export');
     Route::post('/daily-activity/data', [ReportController::class, 'getDailyActivityData'])->name('daily-activity.data');
     Route::post('/daily-activity/export', [ReportController::class, 'exportDailyActivity'])->name('daily-activity.export');
+
+    // Filter Routes
+    Route::post('employees/by-department', [FilterController::class, 'getEmployeesByDepartment']);
+    Route::post('verticals/by-function', [FilterController::class, 'getVerticalsByFunction']);
+    Route::post('departments/by-vertical', [FilterController::class, 'getDepartmentsByVertical']);
+    Route::post('sub-departments/by-department', [FilterController::class, 'getSubDepartmentsByDepartment']);
+    Route::post('employees/by-department', [FilterController::class, 'getEmployeesByDepartment']);
+
+
+    //Claim Route
+    Route::get('/get-claim-detail-view', [ClaimViewController::class, 'getClaimDetailView']);
 
 });

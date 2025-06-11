@@ -142,6 +142,15 @@
                                             </div>
                                         </div>
                                     @endcan
+                                    @can('Filter Sub Department')
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input column-checkbox" type="checkbox"
+                                                    value="sub_department" id="colSubDepartment">
+                                                <label class="form-check-label" for="colSubDepartment">Sub Department</label>
+                                            </div>
+                                        </div>
+                                    @endcan
                                     @can('Filter Policy')
                                         <div class="col-md-3">
                                             <div class="form-check">
