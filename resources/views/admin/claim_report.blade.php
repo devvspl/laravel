@@ -17,8 +17,7 @@
                         </div>
                     </div>
                     <div class="card-body pb-3 pt-0">
-                        <div
-                            class="row bg-light-subtle border-top-dashed border border-start-0 border-end-0 border-bottom-dashed py-3 mb-3">
+                        <div class="row bg-light-subtle border-top-dashed border border-start-0 border-end-0 border-bottom-dashed py-3 mb-3">
                             @can('Filter Function')
                                 <div class="col-md-3">
                                     <label for="functionSelect" class="form-label mt-1">Function</label>

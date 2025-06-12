@@ -10,6 +10,7 @@ use App\Http\Controllers\admin\SettingController;
 use App\Http\Controllers\admin\ReportController;
 use App\Http\Controllers\admin\FinancialYearController;
 use App\Http\Controllers\admin\FilterController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\admin\ClaimViewController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
@@ -105,14 +106,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/daily-activity/export', [ReportController::class, 'exportDailyActivity'])->name('daily-activity.export');
 
     // Filter Routes
+    // Routes for filter select options
     Route::post('employees/by-department', [FilterController::class, 'getEmployeesByDepartment']);
     Route::post('verticals/by-function', [FilterController::class, 'getVerticalsByFunction']);
     Route::post('departments/by-vertical', [FilterController::class, 'getDepartmentsByVertical']);
     Route::post('sub-departments/by-department', [FilterController::class, 'getSubDepartmentsByDepartment']);
     Route::post('employees/by-department', [FilterController::class, 'getEmployeesByDepartment']);
 
-
-    //Claim Route
+    // Claim Routes
     Route::get('/get-claim-detail-view', [ClaimViewController::class, 'getClaimDetailView']);
+
+    // Supoort Message
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat');
+    Route::get('/chat/messages', [ChatController::class, 'fetchMessages']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
 
 });
